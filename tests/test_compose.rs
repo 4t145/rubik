@@ -1,4 +1,4 @@
-use rubik::CubePermutation;
+use rubik::prelude::*;
 
 #[test]
 fn test_compose() {

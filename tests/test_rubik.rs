@@ -1,4 +1,5 @@
-use rubik::*;
+use rubik::{prelude::*, tf};
+
 
 pub fn print_rubik(rubik: &Rubik) {
     use colored::Colorize;
@@ -72,9 +73,5 @@ pub fn print_rubik(rubik: &Rubik) {
 pub fn test_rubik() {
     let mut rubik = Rubik::new();
     use rubik::operation::*;
-    let op = [F, R, U, R_, U_, F_];
-    print_rubik(rubik.execute(op));
-    print_rubik(rubik.execute(op));
-    print_rubik(rubik.execute(op));
-    print_rubik(rubik.execute(op));
+    print_rubik(rubik.execute(tf!([R, U, RI, UI, RI, F, R, FI]; 10)));
 }

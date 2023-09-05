@@ -1,4 +1,5 @@
-use rubik::*;
+use rubik::prelude::*;
+
 
 #[test]
 pub fn test_cube() {

@@ -1,4 +1,4 @@
-use crate::CubeFace;
+use crate::cube::CubeFace;
 
 
 #[repr(u8)]
