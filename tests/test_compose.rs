@@ -12,25 +12,25 @@ fn test_compose() {
         CubePermutation::UNIT
     );
     assert_eq!(
-        CubePermutation::UP + CubePermutation::DOWN,
+        CubePermutation::RIGHT + CubePermutation::LEFT,
         CubePermutation::UNIT
     );
     assert_eq!(
-        CubePermutation::RIGHT + CubePermutation::LEFT,
+        CubePermutation::DOWN + CubePermutation::UP,
         CubePermutation::UNIT
     );
 
     assert_eq!(
-        CubePermutation::UP
-            + CubePermutation::UP
+        CubePermutation::RIGHT
             + CubePermutation::RIGHT
-            + CubePermutation::RIGHT
+            + CubePermutation::DOWN
+            + CubePermutation::DOWN
             + CubePermutation::FRONT
             + CubePermutation::FRONT,
         CubePermutation::UNIT
     );
     assert_eq!(
-        CubePermutation::UP + CubePermutation::RIGHT,
-        CubePermutation::BACK + CubePermutation::UP
+        CubePermutation::RIGHT + CubePermutation::DOWN,
+        CubePermutation::BACK + CubePermutation::RIGHT
     );
 }

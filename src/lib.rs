@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 mod colored;
 pub use colored::*;
-
+pub mod operation;
 // 实际上是四条对角线的置换群
 #[repr(transparent)]
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -98,10 +98,10 @@ impl CubePermutation {
 
     pub const FRONT: Self = Self::X_1;
     pub const BACK: Self = Self::X_3;
-    pub const UP: Self = Self::Y_1;
-    pub const DOWN: Self = Self::Y_3;
-    pub const LEFT: Self = Self::Z_1;
-    pub const RIGHT: Self = Self::Z_3;
+    pub const RIGHT: Self = Self::Y_1;
+    pub const LEFT: Self = Self::Y_3;
+    pub const UP: Self = Self::Z_1;
+    pub const DOWN: Self = Self::Z_3;
 
     pub const fn unit() -> Self {
         Self::UNIT
@@ -136,14 +136,14 @@ pub struct Cube {
 }
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CubeFace {
     F = unsafe { Self::align(CubePermutation::UNIT.0) },
     B = unsafe { Self::align(CubePermutation::Y_2.0) },
-    R = unsafe { Self::align(CubePermutation::LEFT.0) },
-    L = unsafe { Self::align(CubePermutation::RIGHT.0) },
-    U = unsafe { Self::align(CubePermutation::DOWN.0) },
-    D = unsafe { Self::align(CubePermutation::UP.0) },
+    R = unsafe { Self::align(CubePermutation::Z_1.0) },
+    L = unsafe { Self::align(CubePermutation::Z_3.0) },
+    U = unsafe { Self::align(CubePermutation::Y_3.0) },
+    D = unsafe { Self::align(CubePermutation::Y_1.0) },
 }
 
 impl CubeFace {
@@ -174,12 +174,15 @@ impl Cube {
             rotation: CubePermutation::UNIT,
         }
     }
+    pub const fn new_with_rotation(rotation: CubePermutation) -> Self {
+        Self { rotation }
+    }
     pub fn rotate(&mut self, rotation: CubePermutation) -> &mut Self {
         self.rotation = self.rotation.compose(rotation);
         self
     }
     pub const fn get(&self, face: CubeFace) -> CubeFace {
-        CubeFace::from_cube_permutation(self.rotation.compose(face.as_cube_permutation().compose(CubePermutation::FRONT)))
+        CubeFace::from_cube_permutation(self.rotation.compose(face.as_cube_permutation()))
     }
 }
 
@@ -198,7 +201,8 @@ impl Debug for Cube {
 }
 
 pub struct RubikLayerTransform {
-    cude_indecies: [u8; 9],
+    // cude indexes assuming rotaion is clockwise
+    cude_indexes: [u8; 9],
     rotation: CubePermutation,
 }
 
@@ -229,8 +233,8 @@ impl<'r> Iterator for RubikLayerIter<'r> {
     type Item = &'r Cube;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.layer.cude_indecies.len() {
-            let cude = &self.rubik.cubes[self.layer.cude_indecies[self.index] as usize];
+        if self.index < self.layer.cude_indexes.len() {
+            let cude = &self.rubik.cubes[self.layer.cude_indexes[self.index] as usize];
             self.index += 1;
             Some(cude)
         } else {
@@ -266,52 +270,12 @@ LL_LL_LL    FF_FF_FF    RR_RR_RR    BB_BB_BB
 */
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayerTransform {
-    fn rotate3(&self, rubik: &mut Rubik) {
-        for index in self.cude_indecies {
-            rubik.cubes[index as usize].rotate(self.rotation.inverse());
-        }
-        unsafe {
-            let indicies = &self.cude_indecies;
-            ptr_rotate_3([
-                rubik.ptr_of(indicies[0]),
-                rubik.ptr_of(indicies[2]),
-                rubik.ptr_of(indicies[8]),
-                rubik.ptr_of(indicies[6]),
-            ]);
-            ptr_rotate_3([
-                rubik.ptr_of(indicies[1]),
-                rubik.ptr_of(indicies[5]),
-                rubik.ptr_of(indicies[8]),
-                rubik.ptr_of(indicies[3]),
-            ])
-        }
-    }
-    fn rotate2(&self, rubik: &mut Rubik) {
-        for index in self.cude_indecies {
-            rubik.cubes[index as usize].rotate(self.rotation.compose(self.rotation));
-        }
-        unsafe {
-            let indicies = &self.cude_indecies;
-            ptr_rotate_2([
-                rubik.ptr_of(indicies[0]),
-                rubik.ptr_of(indicies[2]),
-                rubik.ptr_of(indicies[8]),
-                rubik.ptr_of(indicies[6]),
-            ]);
-            ptr_rotate_2([
-                rubik.ptr_of(indicies[1]),
-                rubik.ptr_of(indicies[5]),
-                rubik.ptr_of(indicies[8]),
-                rubik.ptr_of(indicies[3]),
-            ])
-        }
-    }
     pub fn rotate1(&self, rubik: &mut Rubik) {
-        for index in self.cude_indecies {
+        for index in self.cude_indexes {
             rubik.cubes[index as usize].rotate(self.rotation);
         }
         unsafe {
-            let indicies = &self.cude_indecies;
+            let indicies = &self.cude_indexes;
             ptr_rotate_1([
                 rubik.ptr_of(indicies[0]),
                 rubik.ptr_of(indicies[2]),
@@ -321,50 +285,50 @@ impl RubikLayerTransform {
             ptr_rotate_1([
                 rubik.ptr_of(indicies[1]),
                 rubik.ptr_of(indicies[5]),
-                rubik.ptr_of(indicies[8]),
+                rubik.ptr_of(indicies[7]),
                 rubik.ptr_of(indicies[3]),
             ])
         }
     }
     pub const fn inverse(self) -> Self {
         Self {
-            cude_indecies: [
-                self.cude_indecies[6],
-                self.cude_indecies[3],
-                self.cude_indecies[0],
-                self.cude_indecies[7],
-                self.cude_indecies[4],
-                self.cude_indecies[1],
-                self.cude_indecies[8],
-                self.cude_indecies[5],
-                self.cude_indecies[2],
+            cude_indexes: [
+                self.cude_indexes[0],
+                self.cude_indexes[3],
+                self.cude_indexes[6],
+                self.cude_indexes[1],
+                self.cude_indexes[4],
+                self.cude_indexes[7],
+                self.cude_indexes[2],
+                self.cude_indexes[5],
+                self.cude_indexes[8],
             ],
             rotation: self.rotation.inverse(),
         }
     }
     pub const F: Self = Self {
-        cude_indecies: [00, 01, 02, 03, 04, 05, 06, 07, 08],
+        cude_indexes: [00, 01, 02, 03, 04, 05, 06, 07, 08],
         rotation: CubePermutation::FRONT,
     };
     pub const B: Self = Self {
-        cude_indecies: [20, 19, 18, 23, 22, 21, 26, 25, 24],
+        cude_indexes: [20, 19, 18, 23, 22, 21, 26, 25, 24],
         rotation: CubePermutation::BACK,
     };
     pub const L: Self = Self {
-        cude_indecies: [18, 09, 00, 21, 12, 03, 24, 15, 06],
-        rotation: CubePermutation::DOWN,
-    };
-    pub const R: Self = Self {
-        cude_indecies: [02, 11, 20, 05, 14, 23, 08, 17, 26],
-        rotation: CubePermutation::UP,
-    };
-    pub const U: Self = Self {
-        cude_indecies: [18, 19, 20, 09, 10, 11, 00, 01, 02],
+        cude_indexes: [18, 09, 00, 21, 12, 03, 24, 15, 06],
         rotation: CubePermutation::LEFT,
     };
-    pub const D: Self = Self {
-        cude_indecies: [06, 07, 08, 15, 16, 17, 24, 25, 26],
+    pub const R: Self = Self {
+        cude_indexes: [02, 11, 20, 05, 14, 23, 08, 17, 26],
         rotation: CubePermutation::RIGHT,
+    };
+    pub const U: Self = Self {
+        cude_indexes: [18, 19, 20, 09, 10, 11, 00, 01, 02],
+        rotation: CubePermutation::UP,
+    };
+    pub const D: Self = Self {
+        cude_indexes: [06, 07, 08, 15, 16, 17, 24, 25, 26],
+        rotation: CubePermutation::DOWN,
     };
 
     pub const F_: Self = Self::F.inverse();
@@ -378,7 +342,26 @@ impl RubikLayerTransform {
 pub struct Rubik {
     cubes: [Cube; 27],
 }
+pub trait RubikTransform {
+    fn apply_on(&self, rubik: &mut Rubik);
+}
 
+
+impl RubikTransform for RubikLayerTransform {
+    fn apply_on(&self, rubik: &mut Rubik) {
+        self.rotate1(rubik);
+    }
+}
+
+pub struct RubikTransformGroup<'a> {
+    inner: Vec<&'a dyn RubikTransform>,
+}
+
+impl RubikTransform for RubikTransformGroup<'_> {
+    fn apply_on(&self, rubik: &mut Rubik) {
+        rubik.execute(self.inner.iter().copied());
+    }
+}
 impl Rubik {
     pub const fn new() -> Self {
         Self {
@@ -388,83 +371,18 @@ impl Rubik {
     unsafe fn ptr_of(&mut self, idx: u8) -> *mut Cube {
         self.cubes.as_mut_ptr().add(idx as usize)
     }
-
-    #[inline]
-    pub fn rotate_layer(&mut self, layer: &RubikLayerTransform) -> &mut Self {
-        layer.rotate1(self);
+    pub fn execute<'a>(
+        &mut self,
+        operations: impl IntoIterator<Item = &'a dyn RubikTransform>,
+    ) -> &mut Self {
+        for op in operations {
+            op.apply_on(self);
+        }
         self
     }
-
-    #[inline]
-    pub fn rotate_layer_inverse(&mut self, layer: &RubikLayerTransform) -> &mut Self {
-        layer.rotate3(self);
+    pub fn execute_one(&mut self, operation: &impl RubikTransform) -> &mut Self {
+        operation.apply_on(self);
         self
-    }
-
-    #[inline]
-    pub fn rotate_layer_twice(&mut self, layer: &RubikLayerTransform) -> &mut Self {
-        layer.rotate2(self);
-        self
-    }
-
-    #[inline]
-    pub fn r(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::R)
-    }
-
-    #[inline]
-    pub fn l(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::L)
-    }
-
-    #[inline]
-    pub fn u(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::U)
-    }
-
-    #[inline]
-    pub fn d(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::D)
-    }
-
-    #[inline]
-    pub fn f(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::F)
-    }
-
-    #[inline]
-    pub fn b(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::B)
-    }
-
-    #[inline]
-    pub fn r_(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::R_)
-    }
-
-    #[inline]
-    pub fn l_(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::L_)
-    }
-
-    #[inline]
-    pub fn u_(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::U_)
-    }
-
-    #[inline]
-    pub fn d_(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::D_)
-    }
-
-    #[inline]
-    pub fn f_(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::F_)
-    }
-
-    #[inline]
-    pub fn b_(&mut self) -> &mut Self {
-        self.rotate_layer(&RubikLayerTransform::B_)
     }
 
     pub fn iter_by_layer(&self, layer: &'static RubikLayerTransform) -> RubikLayerIter<'_> {

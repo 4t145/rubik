@@ -71,20 +71,9 @@ pub fn print_rubik(rubik: &Rubik) {
 #[test]
 pub fn test_rubik() {
     let mut rubik = Rubik::new();
-    print_rubik(rubik.f());
-    print_rubik(rubik.r());
-    print_rubik(rubik.u());
-    print_rubik(rubik.r_());
-    print_rubik(rubik.u_());
-    print_rubik(rubik.f_());
-
-
+    use rubik::operation::*;
+    let op = [F, R, U, R_, U_, F_];
+    print_rubik(rubik.execute(op));
+    print_rubik(rubik.execute(op));
+    print_rubik(rubik.execute(op));
 }
-
-
-
-
-
-
-
-// rubik cude: S12 * S8 * S4
