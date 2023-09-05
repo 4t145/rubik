@@ -15,7 +15,7 @@ pub fn print_rubik(rubik: &Rubik) {
     }
     println!("====================");
     let mut counter = 0;
-    for cube in rubik.iter_by_layer(&RubikLayerTransform::U) {
+    for cube in rubik.iter_by_layer(&RubikLayer::U) {
         if counter % 3 == 0 {
             print!("\t");
         }
@@ -28,10 +28,10 @@ pub fn print_rubik(rubik: &Rubik) {
     }
     println!();
     for (block_cnt, (layer, face)) in [
-        (&RubikLayerTransform::L, CubeFace::L),
-        (&RubikLayerTransform::F, CubeFace::F),
-        (&RubikLayerTransform::R, CubeFace::R),
-        (&RubikLayerTransform::B, CubeFace::B),
+        (&RubikLayer::L, CubeFace::L),
+        (&RubikLayer::F, CubeFace::F),
+        (&RubikLayer::R, CubeFace::R),
+        (&RubikLayer::B, CubeFace::B),
     ]
     .into_iter()
     .enumerate()
@@ -54,7 +54,7 @@ pub fn print_rubik(rubik: &Rubik) {
     print!("\x1B[3B");
     println!();
     counter = 0;
-    for cube in rubik.iter_by_layer(&RubikLayerTransform::D) {
+    for cube in rubik.iter_by_layer(&RubikLayer::D) {
         if counter % 3 == 0 {
             print!("\t");
         }
@@ -73,6 +73,7 @@ pub fn test_rubik() {
     let mut rubik = Rubik::new();
     use rubik::operation::*;
     let op = [F, R, U, R_, U_, F_];
+    print_rubik(rubik.execute(op));
     print_rubik(rubik.execute(op));
     print_rubik(rubik.execute(op));
     print_rubik(rubik.execute(op));
