@@ -1,8 +1,15 @@
-
-use crate::{Rubik, RubikLayer};
 use crate::permutation::CubePermutation;
+use crate::{Rubik, RubikLayer};
 
 use super::RubikTransform;
+
+#[derive(Copy, Clone)]
+pub struct RubikLayerTransform {
+    // cude indexes assuming rotaion is clockwise
+    layer: &'static RubikLayer,
+    rotation: CubePermutation,
+    ptr_rotate: PtrRotate,
+}
 
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayerTransform {
@@ -40,6 +47,7 @@ impl RubikLayerTransform {
             ptr_rotate: self.ptr_rotate.square(),
         }
     }
+
     pub const F: Self = Self {
         layer: &RubikLayer::F,
         rotation: CubePermutation::FRONT,
@@ -86,7 +94,6 @@ impl RubikLayerTransform {
         ptr_rotate: PtrRotate::Rotate1,
     };
 
-
     pub const FI: Self = Self::F.inverse();
     pub const BI: Self = Self::B.inverse();
     pub const LI: Self = Self::L.inverse();
@@ -108,6 +115,7 @@ impl RubikLayerTransform {
     pub const S2: Self = Self::S.square();
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum PtrRotate {
     Rotate0,
     Rotate1,
@@ -156,12 +164,6 @@ unsafe fn ptr_rotate_3<T>(values: [*mut T; 4]) {
     std::ptr::swap(values[3], values[2]);
     std::ptr::swap(values[3], values[1]);
     std::ptr::swap(values[3], values[0]);
-}
-pub struct RubikLayerTransform {
-    // cude indexes assuming rotaion is clockwise
-    layer: &'static RubikLayer,
-    rotation: CubePermutation,
-    ptr_rotate: PtrRotate,
 }
 
 impl RubikTransform for RubikLayerTransform {

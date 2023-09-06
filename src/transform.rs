@@ -27,3 +27,42 @@ macro_rules! tf {
         (&$val as &dyn $crate::transform::RubikTransform).repeat($times)
     };
 }
+
+pub enum RubikTransformGroup {
+    Layer(RubikLayerTransform),
+    Repeat(Box<Self>, usize),
+    Combine(Vec<Self>),
+}
+
+impl RubikTransform for RubikTransformGroup {
+    fn apply_on(&self, rubik: &mut Rubik) {
+        match self {
+            RubikTransformGroup::Layer(layer) => layer.apply_on(rubik),
+            RubikTransformGroup::Repeat(transform, times) => {
+                for _ in 0..*times {
+                    transform.apply_on(rubik);
+                }
+            }
+            RubikTransformGroup::Combine(transforms) => {
+                for transform in transforms {
+                    transform.apply_on(rubik);
+                }
+            }
+        }
+    }
+}
+
+
+impl RubikTransformGroup {
+    pub fn inverse(self) -> Self {
+        match self {
+            RubikTransformGroup::Layer(layer) => RubikTransformGroup::Layer(layer.inverse()),
+            RubikTransformGroup::Repeat(transform, times) => {
+                RubikTransformGroup::Repeat(Box::new(transform.inverse()), times)
+            }
+            RubikTransformGroup::Combine(transforms) => {
+                RubikTransformGroup::Combine(transforms.into_iter().rev().map(|t| t.inverse()).collect())
+            }
+        }
+    }
+}

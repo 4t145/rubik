@@ -4,9 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["singmaster"]
+singmaster = ["dep:nom"]
 
 [dependencies]
-
+nom = { version = "7", optional = true }
 
 [dev-dependencies]
-colored = "2.0.4"
+colored = "2"

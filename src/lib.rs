@@ -10,6 +10,7 @@ pub mod operation;
 pub mod permutation;
 pub mod prelude;
 pub mod transform;
+pub mod parser;
 
 /*
             UU_UU_UU
