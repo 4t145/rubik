@@ -5,7 +5,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = ["singmaster"]
+default = []
 singmaster = ["dep:nom"]
 
 [dependencies]
@@ -13,3 +13,11 @@ nom = { version = "7", optional = true }
 
 [dev-dependencies]
 colored = "2"
+
+[[test]]
+name = "test_parser"
+features = ["singmaster"]
+
+[[example]]
+name = "repl"
+features = ["singmaster"]

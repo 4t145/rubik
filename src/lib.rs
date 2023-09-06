@@ -6,11 +6,10 @@ use cube::Cube;
 
 pub mod colored;
 pub mod cube;
-pub mod operation;
+pub mod parser;
 pub mod permutation;
 pub mod prelude;
 pub mod transform;
-pub mod parser;
 
 /*
             UU_UU_UU
@@ -109,7 +108,7 @@ impl RubikLayer {
     };
     pub const M: Self = Self::L.bias(1);
     pub const R: Self = Self::L.flip_horizonal().bias(2);
-    
+
     pub const U: Self = Self {
         cude_indexes: [18, 19, 20, 09, 10, 11, 00, 01, 02],
     };
@@ -146,6 +145,11 @@ impl Rubik {
         Self {
             cubes: [Cube::new(); 27],
         }
+    }
+
+    pub fn reset(&mut self) -> &mut Self {
+        self.cubes.iter_mut().for_each(|x| *x = Cube::new());
+        self
     }
 
     pub fn is_solved(&self) -> bool {

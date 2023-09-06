@@ -7,7 +7,7 @@ impl CubePermutation {
     pub fn new(value: u8) -> Option<Self> {
         Self::check(value).then_some(Self(value))
     }
-    
+
     pub const fn into_inner(self) -> u8 {
         self.0
     }

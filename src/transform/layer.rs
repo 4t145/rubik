@@ -13,7 +13,7 @@ pub struct RubikLayerTransform {
 
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayerTransform {
-    pub fn rotate(&self, rubik: &mut Rubik) {
+    pub fn apply_on(&self, rubik: &mut Rubik) {
         for index in self.layer.iter().copied() {
             rubik.cubes[index as usize].rotate(self.rotation);
         }
@@ -166,8 +166,8 @@ unsafe fn ptr_rotate_3<T>(values: [*mut T; 4]) {
     std::ptr::swap(values[3], values[0]);
 }
 
-impl RubikTransform for RubikLayerTransform {
-    fn apply_on(&self, rubik: &mut Rubik) {
-        self.rotate(rubik);
+impl From<RubikLayerTransform> for RubikTransform {
+    fn from(val: RubikLayerTransform) -> Self {
+        RubikTransform::Layer(val)
     }
 }

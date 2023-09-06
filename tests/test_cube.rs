@@ -1,6 +1,5 @@
 use rubik::prelude::*;
 
-
 #[test]
 pub fn test_cube() {
     let mut cube = Cube::new();
@@ -34,11 +33,14 @@ pub fn test_cube() {
     assert_eq!(cube.get(CubeFace::D), CubeFace::D);
 }
 
-
 #[test]
 pub fn test_cube_xyz_rotation() {
     let mut cube = Cube::new();
-    cube.rotate(CubePermutation::X_1.compose(CubePermutation::Y_1).compose(CubePermutation::Z_1));
+    cube.rotate(
+        CubePermutation::X_1
+            .compose(CubePermutation::Y_1)
+            .compose(CubePermutation::Z_1),
+    );
     dbg!(cube);
     // assert_eq!(cube.get(CubeFace::L), CubeFace::F);
     // assert_eq!(cube.get(CubeFace::F), CubeFace::R);

@@ -67,3 +67,27 @@ pub fn print_rubik(rubik: &Rubik) {
     }
     println!("====================");
 }
+
+pub fn main() {
+    let mut rubik = Rubik::new();
+    let mut input = String::new();
+    loop {
+        print_rubik(&rubik);
+        std::io::stdin().read_line(&mut input).unwrap();
+        if input.starts_with("/clear") {
+            rubik.reset();
+        } else if input.starts_with("/exit") {
+            break;
+        } else {
+            match rubik::parser::singmaster::parse(input.trim()) {
+                Ok(transform) => {
+                    rubik.execute(transform);
+                }
+                Err(e) => {
+                    println!("Invalid input: {e}");
+                }
+            }
+        }
+        input.clear();
+    }
+}

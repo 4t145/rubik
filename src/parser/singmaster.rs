@@ -10,13 +10,13 @@ use nom::{
     IResult,
 };
 
-use crate::prelude::RubikTransformGroup;
+use crate::{prelude::RubikTransform, tf};
 
-pub fn parse<'a>(src: &'a str) -> Result<RubikTransformGroup, Box<dyn Error + 'a>> {
+pub fn parse<'a>(src: &'a str) -> Result<RubikTransform, Box<dyn Error + 'a>> {
     let input = src.as_ref();
     let (rest, output) = many0(modified_move)(input)?;
     if rest.is_empty() {
-        Ok(RubikTransformGroup::from(output.as_slice()))
+        Ok(RubikTransform::from(output.as_slice()))
     } else {
         Err(format!("parse error near: {}", String::from_utf8(rest.to_vec())?).into())
     }
@@ -119,15 +119,15 @@ fn modified_move(input: &[u8]) -> IResult<&[u8], ModifiedMove> {
     ))
 }
 
-impl From<&[ModifiedMove]> for RubikTransformGroup {
+impl From<&[ModifiedMove]> for RubikTransform {
     fn from(val: &[ModifiedMove]) -> Self {
-        RubikTransformGroup::Combine(val.iter().map(Into::into).collect())
+        RubikTransform::Combine(val.iter().map(Into::into).collect())
     }
 }
 
-impl From<&ModifiedMove> for RubikTransformGroup {
+impl From<&ModifiedMove> for RubikTransform {
     fn from(val: &ModifiedMove) -> Self {
-        let mut tf: RubikTransformGroup = (&val.rubik_move).into();
+        let mut tf: RubikTransform = (&val.rubik_move).into();
         for modifier in &val.modifiers {
             tf = match modifier {
                 Modifier::Inverse => tf.inverse(),
@@ -138,64 +138,37 @@ impl From<&ModifiedMove> for RubikTransformGroup {
     }
 }
 
-impl From<&RubikMove> for RubikTransformGroup {
+impl From<&RubikMove> for RubikTransform {
     fn from(val: &RubikMove) -> Self {
         match val {
             RubikMove::Base(b) => b.into(),
-            RubikMove::Group(g) => RubikTransformGroup::Combine(g.iter().map(Into::into).collect()),
+            RubikMove::Group(g) => RubikTransform::Combine(g.iter().map(Into::into).collect()),
         }
     }
 }
 
-impl From<&BaseMove> for RubikTransformGroup {
+impl From<&BaseMove> for RubikTransform {
     fn from(val: &BaseMove) -> Self {
+        use crate::transform::*;
         match val {
-            BaseMove::F => RubikTransformGroup::F,
-            BaseMove::B => RubikTransformGroup::B,
-            BaseMove::L => RubikTransformGroup::L,
-            BaseMove::R => RubikTransformGroup::R,
-            BaseMove::U => RubikTransformGroup::U,
-            BaseMove::D => RubikTransformGroup::D,
-            BaseMove::M => RubikTransformGroup::M,
-            BaseMove::E => RubikTransformGroup::E,
-            BaseMove::S => RubikTransformGroup::S,
-            BaseMove::X => RubikTransformGroup::Combine(vec![
-                RubikTransformGroup::R,
-                RubikTransformGroup::M.inverse(),
-                RubikTransformGroup::L.inverse(),
-            ]),
-            BaseMove::Y => RubikTransformGroup::Combine(vec![
-                RubikTransformGroup::U,
-                RubikTransformGroup::E.inverse(),
-                RubikTransformGroup::D.inverse(),
-            ]),
-            BaseMove::Z => RubikTransformGroup::Combine(vec![
-                RubikTransformGroup::F,
-                RubikTransformGroup::S.inverse(),
-                RubikTransformGroup::B.inverse(),
-            ]),
-            BaseMove::RR => RubikTransformGroup::Combine(vec![
-                RubikTransformGroup::R,
-                RubikTransformGroup::M.inverse(),
-            ]),
-            BaseMove::LL => {
-                RubikTransformGroup::Combine(vec![RubikTransformGroup::L, RubikTransformGroup::M])
-            }
-            BaseMove::UU => RubikTransformGroup::Combine(vec![
-                RubikTransformGroup::U,
-                RubikTransformGroup::E.inverse(),
-            ]),
-            BaseMove::DD => {
-                RubikTransformGroup::Combine(vec![RubikTransformGroup::D, RubikTransformGroup::E])
-            }
-            BaseMove::FF => RubikTransformGroup::Combine(vec![
-                RubikTransformGroup::F,
-                RubikTransformGroup::S.inverse(),
-            ]),
-            BaseMove::BB => RubikTransformGroup::Combine(vec![
-                RubikTransformGroup::B,
-                RubikTransformGroup::S.inverse(),
-            ]),
+            BaseMove::F => tf!(F),
+            BaseMove::B => tf!(B),
+            BaseMove::L => tf!(L),
+            BaseMove::R => tf!(R),
+            BaseMove::U => tf!(U),
+            BaseMove::D => tf!(D),
+            BaseMove::M => tf!(M),
+            BaseMove::E => tf!(E),
+            BaseMove::S => tf!(S),
+            BaseMove::X => tf!(R, MI, LI),
+            BaseMove::Y => tf!(U, EI, DI),
+            BaseMove::Z => tf!(F, SI, BI),
+            BaseMove::RR => tf!(R, MI),
+            BaseMove::LL => tf!(L, M),
+            BaseMove::UU => tf!(U, EI),
+            BaseMove::DD => tf!(D, E),
+            BaseMove::FF => tf!(F, SI),
+            BaseMove::BB => tf!(B, S),
         }
     }
 }
