@@ -113,7 +113,7 @@ impl RubikLayer {
     pub const U: Self = Self {
         cude_indexes: [18, 19, 20, 09, 10, 11, 00, 01, 02],
     };
-    pub const D: Self = Self::U.flip_vertical().bias(4);
+    pub const D: Self = Self::U.flip_vertical().bias(6);
     pub const E: Self = Self::D.bias(-3);
 }
 

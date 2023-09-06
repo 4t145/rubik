@@ -2,23 +2,34 @@ use std::error::Error;
 
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_till, take_while},
+    bytes::complete::{tag, take_while},
     character::is_digit,
     combinator::{map, map_res, value},
-    multi::{many0, many1},
+    multi::many0,
     sequence::delimited,
     IResult,
 };
 
-use crate::prelude::{RubikLayerTransform, RubikTransformGroup};
+use crate::prelude::RubikTransformGroup;
+
+pub fn parse<'a>(src: &'a str) -> Result<RubikTransformGroup, Box<dyn Error + 'a>> {
+    let input = src.as_ref();
+    let (rest, output) = many0(modified_move)(input)?;
+    if rest.is_empty() {
+        Ok(RubikTransformGroup::from(output.as_slice()))
+    } else {
+        Err(format!("parse error near: {}", String::from_utf8(rest.to_vec())?).into())
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
-pub enum Modifier {
+enum Modifier {
     Inverse,
     Repeat(usize),
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum BaseMove {
+enum BaseMove {
     F,
     B,
     L,
@@ -40,18 +51,18 @@ pub enum BaseMove {
 }
 
 #[derive(Debug, Clone)]
-pub enum RubikMove {
+enum RubikMove {
     Base(BaseMove),
     Group(Vec<ModifiedMove>),
 }
 #[derive(Debug, Clone)]
 
-pub struct ModifiedMove {
+struct ModifiedMove {
     pub rubik_move: RubikMove,
     pub modifiers: Vec<Modifier>,
 }
 
-pub fn modifier(input: &[u8]) -> IResult<&[u8], Modifier> {
+fn modifier(input: &[u8]) -> IResult<&[u8], Modifier> {
     alt((
         value(Modifier::Inverse, tag("'")),
         map_res(take_while(is_digit), |s: &[u8]| {
@@ -62,7 +73,7 @@ pub fn modifier(input: &[u8]) -> IResult<&[u8], Modifier> {
     ))(input)
 }
 
-pub fn base_move(input: &[u8]) -> IResult<&[u8], BaseMove> {
+fn base_move(input: &[u8]) -> IResult<&[u8], BaseMove> {
     alt((
         value(BaseMove::F, tag("F")),
         value(BaseMove::B, tag("B")),
@@ -85,7 +96,7 @@ pub fn base_move(input: &[u8]) -> IResult<&[u8], BaseMove> {
     ))(input)
 }
 
-pub fn rubik_move(input: &[u8]) -> IResult<&[u8], RubikMove> {
+fn rubik_move(input: &[u8]) -> IResult<&[u8], RubikMove> {
     alt((
         delimited(
             tag("("),
@@ -96,7 +107,7 @@ pub fn rubik_move(input: &[u8]) -> IResult<&[u8], RubikMove> {
     ))(input)
 }
 
-pub fn modified_move(input: &[u8]) -> IResult<&[u8], ModifiedMove> {
+fn modified_move(input: &[u8]) -> IResult<&[u8], ModifiedMove> {
     let (input, rubik_move) = rubik_move(input)?;
     let (input, modifiers) = many0(modifier)(input)?;
     Ok((
@@ -106,16 +117,6 @@ pub fn modified_move(input: &[u8]) -> IResult<&[u8], ModifiedMove> {
             modifiers,
         },
     ))
-}
-
-pub fn parse<'a>(src: &'a str) -> Result<Vec<ModifiedMove>, Box<dyn Error + 'a>> {
-    let input = src.as_ref();
-    let (rest, output) = many0(modified_move)(input)?;
-    if rest.is_empty() {
-        Ok(output)
-    } else {
-        Err(format!("parse error near: {}", String::from_utf8(rest.to_vec())?).into())
-    }
 }
 
 impl From<&[ModifiedMove]> for RubikTransformGroup {
