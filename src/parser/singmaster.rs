@@ -2,11 +2,11 @@ use std::error::Error;
 
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_while, take_till},
+    bytes::complete::{tag, take_till, take_while},
     character::is_digit,
-    combinator::{map_res, value, map},
-    sequence::delimited,
+    combinator::{map, map_res, value},
     multi::{many0, many1},
+    sequence::delimited,
     IResult,
 };
 
@@ -18,7 +18,26 @@ pub enum Modifier {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum BaseMove {F,B,L,R,U,D,M,E,S,X,Y,Z,RR,LL,UU,DD,FF,BB}
+pub enum BaseMove {
+    F,
+    B,
+    L,
+    R,
+    U,
+    D,
+    M,
+    E,
+    S,
+    X,
+    Y,
+    Z,
+    RR,
+    LL,
+    UU,
+    DD,
+    FF,
+    BB,
+}
 
 #[derive(Debug, Clone)]
 pub enum RubikMove {
@@ -32,16 +51,13 @@ pub struct ModifiedMove {
     pub modifiers: Vec<Modifier>,
 }
 
-impl From<&[ModifiedMove]> for RubikTransformGroup {
-    fn from(val: &[ModifiedMove]) -> Self {
-        todo!()
-    }
-}
 pub fn modifier(input: &[u8]) -> IResult<&[u8], Modifier> {
     alt((
         value(Modifier::Inverse, tag("'")),
         map_res(take_while(is_digit), |s: &[u8]| {
-            String::from_utf8_lossy(s).parse::<usize>().map(Modifier::Repeat)
+            String::from_utf8_lossy(s)
+                .parse::<usize>()
+                .map(Modifier::Repeat)
         }),
     ))(input)
 }
@@ -69,15 +85,11 @@ pub fn base_move(input: &[u8]) -> IResult<&[u8], BaseMove> {
     ))(input)
 }
 
-
-pub fn rubik_move(input: &[u8])-> IResult<&[u8], RubikMove> {
+pub fn rubik_move(input: &[u8]) -> IResult<&[u8], RubikMove> {
     alt((
         delimited(
             tag("("),
-            map(
-                many0(modified_move),
-                RubikMove::Group,
-            ),
+            map(many0(modified_move), RubikMove::Group),
             tag(")"),
         ),
         map(base_move, RubikMove::Base),
@@ -87,9 +99,14 @@ pub fn rubik_move(input: &[u8])-> IResult<&[u8], RubikMove> {
 pub fn modified_move(input: &[u8]) -> IResult<&[u8], ModifiedMove> {
     let (input, rubik_move) = rubik_move(input)?;
     let (input, modifiers) = many0(modifier)(input)?;
-    Ok((input, ModifiedMove { rubik_move, modifiers }))
+    Ok((
+        input,
+        ModifiedMove {
+            rubik_move,
+            modifiers,
+        },
+    ))
 }
-
 
 pub fn parse<'a>(src: &'a str) -> Result<Vec<ModifiedMove>, Box<dyn Error + 'a>> {
     let input = src.as_ref();
@@ -98,5 +115,86 @@ pub fn parse<'a>(src: &'a str) -> Result<Vec<ModifiedMove>, Box<dyn Error + 'a>>
         Ok(output)
     } else {
         Err(format!("parse error near: {}", String::from_utf8(rest.to_vec())?).into())
+    }
+}
+
+impl From<&[ModifiedMove]> for RubikTransformGroup {
+    fn from(val: &[ModifiedMove]) -> Self {
+        RubikTransformGroup::Combine(val.iter().map(Into::into).collect())
+    }
+}
+
+impl From<&ModifiedMove> for RubikTransformGroup {
+    fn from(val: &ModifiedMove) -> Self {
+        let mut tf: RubikTransformGroup = (&val.rubik_move).into();
+        for modifier in &val.modifiers {
+            tf = match modifier {
+                Modifier::Inverse => tf.inverse(),
+                Modifier::Repeat(n) => tf.repeat(*n),
+            }
+        }
+        tf
+    }
+}
+
+impl From<&RubikMove> for RubikTransformGroup {
+    fn from(val: &RubikMove) -> Self {
+        match val {
+            RubikMove::Base(b) => b.into(),
+            RubikMove::Group(g) => RubikTransformGroup::Combine(g.iter().map(Into::into).collect()),
+        }
+    }
+}
+
+impl From<&BaseMove> for RubikTransformGroup {
+    fn from(val: &BaseMove) -> Self {
+        match val {
+            BaseMove::F => RubikTransformGroup::F,
+            BaseMove::B => RubikTransformGroup::B,
+            BaseMove::L => RubikTransformGroup::L,
+            BaseMove::R => RubikTransformGroup::R,
+            BaseMove::U => RubikTransformGroup::U,
+            BaseMove::D => RubikTransformGroup::D,
+            BaseMove::M => RubikTransformGroup::M,
+            BaseMove::E => RubikTransformGroup::E,
+            BaseMove::S => RubikTransformGroup::S,
+            BaseMove::X => RubikTransformGroup::Combine(vec![
+                RubikTransformGroup::R,
+                RubikTransformGroup::M.inverse(),
+                RubikTransformGroup::L.inverse(),
+            ]),
+            BaseMove::Y => RubikTransformGroup::Combine(vec![
+                RubikTransformGroup::U,
+                RubikTransformGroup::E.inverse(),
+                RubikTransformGroup::D.inverse(),
+            ]),
+            BaseMove::Z => RubikTransformGroup::Combine(vec![
+                RubikTransformGroup::F,
+                RubikTransformGroup::S.inverse(),
+                RubikTransformGroup::B.inverse(),
+            ]),
+            BaseMove::RR => RubikTransformGroup::Combine(vec![
+                RubikTransformGroup::R,
+                RubikTransformGroup::M.inverse(),
+            ]),
+            BaseMove::LL => {
+                RubikTransformGroup::Combine(vec![RubikTransformGroup::L, RubikTransformGroup::M])
+            }
+            BaseMove::UU => RubikTransformGroup::Combine(vec![
+                RubikTransformGroup::U,
+                RubikTransformGroup::E.inverse(),
+            ]),
+            BaseMove::DD => {
+                RubikTransformGroup::Combine(vec![RubikTransformGroup::D, RubikTransformGroup::E])
+            }
+            BaseMove::FF => RubikTransformGroup::Combine(vec![
+                RubikTransformGroup::F,
+                RubikTransformGroup::S.inverse(),
+            ]),
+            BaseMove::BB => RubikTransformGroup::Combine(vec![
+                RubikTransformGroup::B,
+                RubikTransformGroup::S.inverse(),
+            ]),
+        }
     }
 }

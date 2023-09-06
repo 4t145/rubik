@@ -65,4 +65,18 @@ impl RubikTransformGroup {
             }
         }
     }
+
+    pub fn repeat(self, n: usize) -> Self {
+        Self::Repeat(Box::new(self), n)
+    }
+
+    pub const F: Self = RubikTransformGroup::Layer(RubikLayerTransform::F);
+    pub const B: Self = RubikTransformGroup::Layer(RubikLayerTransform::B);
+    pub const L: Self = RubikTransformGroup::Layer(RubikLayerTransform::L);
+    pub const R: Self = RubikTransformGroup::Layer(RubikLayerTransform::R);
+    pub const U: Self = RubikTransformGroup::Layer(RubikLayerTransform::U);
+    pub const D: Self = RubikTransformGroup::Layer(RubikLayerTransform::D);
+    pub const M: Self = RubikTransformGroup::Layer(RubikLayerTransform::M);
+    pub const E: Self = RubikTransformGroup::Layer(RubikLayerTransform::E);
+    pub const S: Self = RubikTransformGroup::Layer(RubikLayerTransform::S);
 }
