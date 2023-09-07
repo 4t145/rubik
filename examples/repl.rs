@@ -3,30 +3,31 @@ use rubik::prelude::*;
 pub fn print_rubik(rubik: &Rubik) {
     use colored::Colorize;
     let color_map = RubikColor::classic_map();
-    fn print_color(c: RubikColor) {
-        match c {
-            RubikColor::White => print!("{} ", "■".white()),
-            RubikColor::Yellow => print!("{} ", "■".yellow()),
-            RubikColor::Red => print!("{} ", "■".red()),
-            RubikColor::Orange => print!("{} ", "■".magenta()),
-            RubikColor::Blue => print!("{} ", "■".blue()),
-            RubikColor::Green => print!("{} ", "■".green()),
-        }
+    fn print_color(c: RubikColor, aligned: bool) {
+        let block = if aligned { "[]" } else { "  " };
+        let block = match c {
+            RubikColor::White => block.on_white(),
+            RubikColor::Yellow => block.on_yellow(),
+            RubikColor::Red => block.on_red(),
+            RubikColor::Orange => block.on_magenta(),
+            RubikColor::Blue => block.on_blue(),
+            RubikColor::Green => block.on_green(),
+        };
+        print!("{block}");
     }
     println!("====================");
     let mut counter = 0;
     for cube in rubik.iter_by_layer(&RubikLayer::U) {
         if counter % 3 == 0 {
-            print!("\t");
+            print!("{:6}", "");
         }
         let color = color_map[cube.get(CubeFace::U)];
-        print_color(color);
+        print_color(color, rubik.is_aligned(cube));
         counter += 1;
         if counter % 3 == 0 {
             println!();
         }
     }
-    println!();
     for (block_cnt, (layer, face)) in [
         (&RubikLayer::L, CubeFace::L),
         (&RubikLayer::F, CubeFace::F),
@@ -38,12 +39,12 @@ pub fn print_rubik(rubik: &Rubik) {
     {
         counter = 0;
         for cube in rubik.iter_by_layer(layer) {
-            if counter % 3 == 0 {
+            if counter % 3 == 0 && block_cnt != 0 {
                 // move to line's end
-                print!("\x1B[{}C", block_cnt * 8);
+                print!("\x1B[{}C", block_cnt * 6);
             }
             let color = color_map[cube.get(face)];
-            print_color(color);
+            print_color(color, rubik.is_aligned(cube));
             counter += 1;
             if counter % 3 == 0 {
                 println!();
@@ -52,14 +53,13 @@ pub fn print_rubik(rubik: &Rubik) {
         print!("\x1B[3A");
     }
     print!("\x1B[3B");
-    println!();
     counter = 0;
     for cube in rubik.iter_by_layer(&RubikLayer::D) {
         if counter % 3 == 0 {
-            print!("\t");
+            print!("{:6}", "");
         }
         let color = color_map[cube.get(CubeFace::D)];
-        print_color(color);
+        print_color(color, rubik.is_aligned(cube));
         counter += 1;
         if counter % 3 == 0 {
             println!();

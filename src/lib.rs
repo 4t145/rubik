@@ -2,7 +2,7 @@
 
 use std::ops::Deref;
 
-use cube::Cube;
+use cube::{Cube, CubeFace};
 
 pub mod colored;
 pub mod cube;
@@ -101,7 +101,7 @@ impl RubikLayer {
         cude_indexes: [00, 01, 02, 03, 04, 05, 06, 07, 08],
     };
     pub const B: Self = Self::F.flip_horizonal().bias(18);
-    pub const S: Self = Self::F.bias(9);
+    pub const S: Self = Self::F.flip_horizonal().bias(9);
 
     pub const L: Self = Self {
         cude_indexes: [18, 09, 00, 21, 12, 03, 24, 15, 06],
@@ -153,8 +153,21 @@ impl Rubik {
     }
 
     pub fn is_solved(&self) -> bool {
-        let core = self.core();
-        self.cubes.iter().all(|c| c.eq(core))
+        [
+            (&RubikLayer::F, CubeFace::F),
+            (&RubikLayer::B, CubeFace::B),
+            (&RubikLayer::R, CubeFace::R),
+            (&RubikLayer::L, CubeFace::L),
+            (&RubikLayer::U, CubeFace::U),
+            (&RubikLayer::D, CubeFace::D),
+        ]
+        .iter()
+        .all(|(layer, face)| {
+            let mid_face = self.get_by_layer(layer, 4).get(*face);
+            self.iter_by_layer(layer)
+                .map(|c| c.get(*face))
+                .all(|f| f == mid_face)
+        })
     }
 
     unsafe fn ptr_of(&mut self, idx: u8) -> *mut Cube {
@@ -178,6 +191,6 @@ impl Rubik {
     }
 
     pub fn is_aligned(&self, cube: &Cube) -> bool {
-        self.core().eq(cube)
+        (*self.core()).eq(cube)
     }
 }
