@@ -128,11 +128,22 @@ impl From<&[ModifiedMove]> for RubikTransform {
 impl From<&ModifiedMove> for RubikTransform {
     fn from(val: &ModifiedMove) -> Self {
         let mut tf: RubikTransform = (&val.rubik_move).into();
+        let mut inv = false;
+        let mut repeat_times = 1;
         for modifier in &val.modifiers {
-            tf = match modifier {
-                Modifier::Inverse => tf.inverse(),
-                Modifier::Repeat(n) => tf.repeat(*n),
+            match modifier {
+                Modifier::Inverse => inv = !inv,
+                Modifier::Repeat(n) => repeat_times *= n,
             }
+        }
+        if repeat_times == 0 {
+            return RubikTransform::Combine(vec![]);
+        }
+        if inv {
+            tf = tf.inverse();
+        }
+        if repeat_times > 1 {
+            tf = tf.repeat(repeat_times);
         }
         tf
     }
