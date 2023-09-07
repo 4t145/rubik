@@ -1,9 +1,12 @@
 // 实际上是四条对角线的置换群
 #[repr(transparent)]
 #[derive(PartialEq, Eq, Clone, Copy)]
+
+/// an element of S4 group
 pub struct CubePermutation(pub(crate) u8);
 
 impl CubePermutation {
+    /// new with check
     pub fn new(value: u8) -> Option<Self> {
         Self::check(value).then_some(Self(value))
     }
@@ -12,7 +15,8 @@ impl CubePermutation {
         self.0
     }
 
-    pub fn check(value: u8) -> bool {
+    /// check if the value is valid permutation
+    pub const fn check(value: u8) -> bool {
         let p0 = value & 0b11;
         let p1 = value >> 2 & 0b11;
         let p2 = value >> 4 & 0b11;
@@ -20,13 +24,14 @@ impl CubePermutation {
         !(p0 == p1 || p0 == p2 || p0 == p3 || p1 == p2 || p1 == p3 || p2 == p3)
     }
 
+    /// new without valid check
     /// # Safety
     /// if every 2-bit segment is distinct, then value is a valid permutation
     pub const unsafe fn new_unchecked(value: u8) -> Self {
         Self(value)
     }
 
-    // P: replace original S ith element with S[P[i]]
+    /// the group binary operation, `a.compose(b)` means a+b
     pub const fn compose(self, p: Self) -> Self {
         Self(unsafe {
             self.get_unchecked(p.get_unchecked(0))
@@ -36,6 +41,7 @@ impl CubePermutation {
         })
     }
 
+    /// the inverse element of it
     pub const fn inverse(self) -> Self {
         Self(unsafe {
             0 << (self.get_unchecked(0) * 2)
@@ -98,6 +104,20 @@ impl std::ops::Add for CubePermutation {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         self.compose(rhs)
+    }
+}
+
+impl std::ops::Neg for CubePermutation {
+    type Output = Self;
+    fn neg(self) -> Self::Output {
+        self.inverse()
+    }
+}
+
+impl std::ops::Sub for CubePermutation {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.compose(rhs.inverse())
     }
 }
 

@@ -153,8 +153,8 @@ impl Rubik {
     }
 
     pub fn is_solved(&self) -> bool {
-        let first_cube = &self.cubes[0];
-        self.cubes.iter().all(|c| c.eq(first_cube))
+        let core = self.core();
+        self.cubes.iter().all(|c| c.eq(core))
     }
 
     unsafe fn ptr_of(&mut self, idx: u8) -> *mut Cube {
@@ -167,5 +167,17 @@ impl Rubik {
             rubik: self,
             index: 0,
         }
+    }
+
+    pub fn core(&self) -> &Cube {
+        &self.cubes[13]
+    }
+
+    pub fn get_by_layer(&self, layer: &'static RubikLayer, index: usize) -> &Cube {
+        &self.cubes[layer.cude_indexes[index] as usize]
+    }
+
+    pub fn is_aligned(&self, cube: &Cube) -> bool {
+        self.core().eq(cube)
     }
 }

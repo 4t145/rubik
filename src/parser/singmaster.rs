@@ -3,7 +3,7 @@ use std::error::Error;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::is_digit,
+    character::{is_digit, complete::space0},
     combinator::{map, map_res, value},
     multi::many0,
     sequence::delimited,
@@ -108,8 +108,10 @@ fn rubik_move(input: &[u8]) -> IResult<&[u8], RubikMove> {
 }
 
 fn modified_move(input: &[u8]) -> IResult<&[u8], ModifiedMove> {
+    let (input, _) = space0(input)?;
     let (input, rubik_move) = rubik_move(input)?;
     let (input, modifiers) = many0(modifier)(input)?;
+    let (input, _) = space0(input)?;
     Ok((
         input,
         ModifiedMove {
