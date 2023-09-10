@@ -3,6 +3,7 @@
 use std::ops::Deref;
 
 use cube::{Cube, CubeFace};
+use transform::RubikTransform;
 
 pub mod colored;
 pub mod cube;
@@ -38,6 +39,7 @@ LL_LL_LL    FF_FF_FF    RR_RR_RR    BB_BB_BB
             24_25_26
 */
 #[repr(transparent)]
+#[derive(Debug)]
 pub struct RubikLayer {
     // cude indexes assuming rotaion is clockwise
     cude_indexes: [u8; 9],
@@ -192,5 +194,44 @@ impl Rubik {
 
     pub fn is_aligned(&self, cube: &Cube) -> bool {
         (*self.core()).eq(cube)
+    }
+
+    pub fn shuffle(&mut self, round: usize) -> Vec<RubikTransform> {
+        use crate::transform::*;
+        let op = [R, F, B, D, U, L];
+        let mut shuffle = vec![];
+        for _round in 0..round {
+            let idx = rand::random::<usize>() % op.len();
+            shuffle.push(tf!(op[idx]));
+        }
+        for tf in &shuffle {
+            self.execute(tf);
+        }
+        shuffle
+    }
+}
+
+impl Default for Rubik {
+    fn default() -> Self {
+        Self {
+            cubes: [Cube::new(); 27],
+        }
+    }
+}
+
+impl std::fmt::Debug for Rubik {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fn collect_layer(face: CubeFace, iter: RubikLayerIter<'_>, f: &mut std::fmt::DebugStruct) {
+            let v: Vec<_> = iter.map(|x| x.get(face)).collect();
+            f.field(&format!("{face:?}"), &[&v[0..3], &v[3..6], &v[6..9]]);
+        }
+        let mut f = f.debug_struct("Rubik");
+        collect_layer(CubeFace::F, self.iter_by_layer(&RubikLayer::F), &mut f);
+        collect_layer(CubeFace::B, self.iter_by_layer(&RubikLayer::B), &mut f);
+        collect_layer(CubeFace::R, self.iter_by_layer(&RubikLayer::R), &mut f);
+        collect_layer(CubeFace::L, self.iter_by_layer(&RubikLayer::L), &mut f);
+        collect_layer(CubeFace::U, self.iter_by_layer(&RubikLayer::U), &mut f);
+        collect_layer(CubeFace::D, self.iter_by_layer(&RubikLayer::D), &mut f);
+        f.finish()
     }
 }

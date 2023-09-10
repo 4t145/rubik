@@ -4,7 +4,7 @@ pub use layer::*;
 use crate::Rubik;
 
 impl Rubik {
-    pub fn execute(&mut self, operation: RubikTransform) -> &mut Self {
+    pub fn execute(&mut self, operation: &RubikTransform) -> &mut Self {
         operation.apply_on(self);
         self
     }
@@ -25,6 +25,7 @@ macro_rules! tf {
     };
 }
 
+#[derive(Debug, Clone)]
 pub enum RubikTransform {
     Layer(RubikLayerTransform),
     Repeat(Box<Self>, usize),

@@ -10,9 +10,13 @@ singmaster = ["dep:nom"]
 
 [dependencies]
 nom = { version = "7", optional = true }
+rand = "0.8.5"
 
 [dev-dependencies]
 colored = "2"
+crossterm = "0.27.0"
+ratatui = { version = "0.23.0", features = ["all-widgets"] }
+tui-input = "*"
 
 [[test]]
 name = "test_parser"

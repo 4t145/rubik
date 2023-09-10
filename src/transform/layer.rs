@@ -11,6 +11,15 @@ pub struct RubikLayerTransform {
     ptr_rotate: PtrRotate,
 }
 
+impl std::fmt::Debug for RubikLayerTransform {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RubikLayerTransform")
+            .field("layer", &self.layer)
+            .field("rotation", &self.rotation)
+            .field("ptr_rotate", &self.ptr_rotate)
+            .finish()
+    }
+}
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayerTransform {
     pub fn apply_on(&self, rubik: &mut Rubik) {

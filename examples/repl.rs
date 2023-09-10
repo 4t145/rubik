@@ -74,14 +74,16 @@ pub fn main() {
     loop {
         print_rubik(&rubik);
         std::io::stdin().read_line(&mut input).unwrap();
-        if input.starts_with("/clear") {
+        if input.starts_with("/reset") {
             rubik.reset();
         } else if input.starts_with("/exit") {
             break;
+        } else if input.starts_with("/shuffle") {
+            rubik.shuffle(64);
         } else {
             match rubik::parser::singmaster::parse(input.trim()) {
                 Ok(transform) => {
-                    rubik.execute(transform);
+                    rubik.execute(&transform);
                 }
                 Err(e) => {
                     println!("Invalid input: {e}");
