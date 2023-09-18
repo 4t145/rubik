@@ -1,7 +1,7 @@
 use crate::permutation::CubePermutation;
 use std::fmt::Debug;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
 pub struct Cube {
     pub rotation: CubePermutation,

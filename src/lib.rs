@@ -1,17 +1,18 @@
 #![allow(clippy::unusual_byte_groupings)]
 
-use std::ops::Deref;
+use std::{ops::Deref, hash::Hash};
 
 use cube::{Cube, CubeFace};
-use transform::RubikTransform;
+use solver::RubikSolver;
+use transform::{RubikLayerTransform, RubikTransform};
 
 pub mod colored;
 pub mod cube;
 pub mod parser;
 pub mod permutation;
 pub mod prelude;
-pub mod transform;
 pub mod solver;
+pub mod transform;
 /*
             UU_UU_UU
             UU_UU_UU
@@ -54,6 +55,22 @@ impl Deref for RubikLayer {
 
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayer {
+    const fn marker(&self) -> &'static str {
+        macro_rules! gen {
+            ($($SYMBOL: ident),*) => {
+                if false {
+                    unreachable!()
+                } $(
+                    else if self.cude_indexes[0] == Self::$SYMBOL.cude_indexes[0] && self.cude_indexes[8] == Self::$SYMBOL.cude_indexes[8] {
+                        stringify!($SYMBOL)
+                    }
+                )* else {
+                    unreachable!()
+                }
+            };
+        }
+        gen!(F, B, S, L, M, R, U, D, E)
+    }
     const fn bias(self, offset: i8) -> Self {
         Self {
             cude_indexes: [
@@ -138,7 +155,7 @@ impl<'r> Iterator for RubikLayerIter<'r> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Rubik {
     cubes: [Cube; 27],
 }
@@ -197,18 +214,14 @@ impl Rubik {
         (*self.core()).eq(cube)
     }
 
-    pub fn shuffle(&mut self, round: usize) -> Vec<RubikTransform> {
-        use crate::transform::*;
-        let op = [R, F, B, D, U, L];
-        let mut shuffle = vec![];
-        for _round in 0..round {
-            let idx = rand::random::<usize>() % op.len();
-            shuffle.push(tf!(op[idx]));
-        }
-        for tf in &shuffle {
-            self.execute(tf);
-        }
-        shuffle
+    pub fn solve(&mut self, solver: impl RubikSolver) -> Vec<&'static RubikLayerTransform> {
+        let (new_rubik, tf) = solver.solve(self.clone());
+        *self = new_rubik;
+        tf
+    }
+
+    pub fn shuffle(&mut self, steps: usize) -> Vec<&'static RubikLayerTransform> {
+        self.solve(solver::shuffle::Shuffle::new(steps))
     }
 }
 

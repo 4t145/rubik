@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use crate::permutation::CubePermutation;
 use crate::{Rubik, RubikLayer};
 
@@ -20,6 +22,19 @@ impl std::fmt::Debug for RubikLayerTransform {
             .finish()
     }
 }
+
+impl Display for RubikLayerTransform {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.layer.marker())?;
+        f.write_str(match self.ptr_rotate {
+            PtrRotate::Rotate0 => "0",
+            PtrRotate::Rotate1 => "",
+            PtrRotate::Rotate2 => "2",
+            PtrRotate::Rotate3 => "'",
+        })
+    }
+}
+
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayerTransform {
     pub fn apply_on(&self, rubik: &mut Rubik) {

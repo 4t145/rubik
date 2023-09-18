@@ -1,6 +1,6 @@
 // 实际上是四条对角线的置换群
 #[repr(transparent)]
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Hash)]
 
 /// an element of S4 group
 pub struct CubePermutation(pub(crate) u8);

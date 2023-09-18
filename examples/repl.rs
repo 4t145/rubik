@@ -1,6 +1,9 @@
 use rubik::{
     prelude::*,
-    solver::{thistlethwaite::Thistlethwaite, RubikSolver},
+    solver::{
+        thistlethwaite::{BfsSolver, Thistlethwaite},
+        RubikSolver,
+    },
     tf,
 };
 #[allow(dead_code)]
@@ -83,13 +86,31 @@ pub fn main() {
         } else if input.starts_with("/exit") {
             break;
         } else if input.starts_with("/shuffle") {
-            rubik.shuffle(64);
-        } else if input.starts_with("/solve") {
-            let solution = Thistlethwaite { thread: 1 }.solve(&rubik);
-            println!("Solution.len: {}", solution.len());
-            for op in solution {
-                op.apply_on(&mut rubik);
-            }
+            let tfs = rubik.shuffle(16).iter().fold(String::new(), |mut s, tf| {
+                s.push_str(&tf.to_string());
+                s
+            });
+            println!("{}", tfs)
+        } else if let Some(solver) = input.strip_prefix("/solve") {
+            let (new_rubik, transfrom) = match solver.trim() {
+                "C" => BfsSolver::C.solve(rubik),
+                "G0" => BfsSolver::G0.solve(rubik),
+                "G1" => BfsSolver::G1.solve(rubik),
+                "G2" => BfsSolver::G2.solve(rubik),
+                "G3" => BfsSolver::G3.solve(rubik),
+                solver => {
+                    println!("no such solver {solver}");
+                    input.clear();
+                    continue;
+                }
+            };
+            rubik = new_rubik;
+            println!("Solution.len: {}", transfrom.len());
+            let tfs: String = transfrom.iter().fold(String::new(), |mut s, tf| {
+                s.push_str(&tf.to_string());
+                s
+            });
+            println!("{tfs}")
         } else {
             match rubik::parser::singmaster::parse(input.trim()) {
                 Ok(transform) => {
