@@ -1,4 +1,8 @@
-use rubik::prelude::*;
+use rubik::{
+    prelude::*,
+    solver::{thistlethwaite::Thistlethwaite, RubikSolver},
+    tf,
+};
 #[allow(dead_code)]
 pub fn print_rubik(rubik: &Rubik) {
     use colored::Colorize;
@@ -80,6 +84,12 @@ pub fn main() {
             break;
         } else if input.starts_with("/shuffle") {
             rubik.shuffle(64);
+        } else if input.starts_with("/solve") {
+            let solution = Thistlethwaite { thread: 1 }.solve(&rubik);
+            println!("Solution.len: {}", solution.len());
+            for op in solution {
+                op.apply_on(&mut rubik);
+            }
         } else {
             match rubik::parser::singmaster::parse(input.trim()) {
                 Ok(transform) => {

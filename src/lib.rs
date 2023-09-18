@@ -11,7 +11,7 @@ pub mod parser;
 pub mod permutation;
 pub mod prelude;
 pub mod transform;
-
+pub mod solver;
 /*
             UU_UU_UU
             UU_UU_UU
@@ -138,6 +138,7 @@ impl<'r> Iterator for RubikLayerIter<'r> {
     }
 }
 
+#[derive(Clone)]
 pub struct Rubik {
     cubes: [Cube; 27],
 }
