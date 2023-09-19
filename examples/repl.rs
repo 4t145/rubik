@@ -79,7 +79,7 @@ pub fn main() {
     let mut rubik = Rubik::new();
     let mut input = String::new();
     loop {
-        print_rubik(&rubik);
+        // print_rubik(&rubik);
         std::io::stdin().read_line(&mut input).unwrap();
         if input.starts_with("/reset") {
             rubik.reset();

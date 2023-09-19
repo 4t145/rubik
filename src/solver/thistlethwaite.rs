@@ -16,18 +16,35 @@ pub struct BfsSolver {
     checker: fn(&Rubik) -> bool,
 }
 
+fn all_aligned(cube: &Cube) -> bool {
+    let l = cube.get(CubeFace::L);
+    let f = cube.get(CubeFace::F);
+    let u = cube.get(CubeFace::U);
+    (l == CubeFace::L || l == CubeFace::R)
+        && (f == CubeFace::F || f == CubeFace::B)
+        && (u == CubeFace::U || u == CubeFace::D)
+}
+
 fn checker_c(rubik: &Rubik) -> bool {
     rubik.core().rotation == CubePermutation::UNIT
 }
 fn checker_g0(rubik: &Rubik) -> bool {
-    fn g0_aligned(cube: &Cube) -> bool {
-        let fu = cube.get(CubeFace::U);
-        let fl = cube.get(CubeFace::L);
-        fu != CubeFace::L && fu != CubeFace::R && fl != CubeFace::U && fl != CubeFace::D
-    }
-    rubik.iter_by_layer(&RubikLayer::E).all(g0_aligned)
-    && rubik.iter_by_layer(&RubikLayer::M).all(g0_aligned)
-    && rubik.iter_by_layer(&RubikLayer::S).all(g0_aligned)
+    rubik.iter_by_layer(&RubikLayer::E).all(|cube| {
+        all_aligned(cube.clone().rotate(CubePermutation::Y_1))
+            || all_aligned(
+                cube.clone()
+                    .rotate(CubePermutation::Y_1.compose(CubePermutation::Z_1)),
+            )
+    }) && rubik.iter_by_layer(&RubikLayer::M).all(|cube| {
+        all_aligned(cube.clone().rotate(CubePermutation::Z_1))
+            || all_aligned(
+                cube.clone()
+                    .rotate(CubePermutation::Z_1.compose(CubePermutation::Y_1)),
+            )
+    }) && rubik.iter_by_layer(&RubikLayer::S).all(|cube| {
+        all_aligned(cube.clone().rotate(CubePermutation::Z_1))
+            || all_aligned(cube.clone().rotate(CubePermutation::Y_1))
+    })
 }
 fn checker_g1(rubik: &Rubik) -> bool {
     fn g1_aligned(cube: &Cube) -> bool {
@@ -59,7 +76,7 @@ impl BfsSolver {
                 let mut rubik = rubik.clone();
                 op.apply_on(&mut rubik);
                 if !reached.contains(&rubik) {
-                    reached.insert(rubik.clone());                 
+                    reached.insert(rubik.clone());
                     let mut new_ops = ops.clone();
                     new_ops.push(*op);
                     new_quene.push((rubik, new_ops));
