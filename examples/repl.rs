@@ -1,6 +1,8 @@
 use rubik::{
     prelude::*,
     solver::{
+        ida_star::IdaStarSolver,
+        sa::SaRubikSolver,
         thistlethwaite::{BfsSolver, Thistlethwaite},
         RubikSolver,
     },
@@ -79,7 +81,8 @@ pub fn main() {
     let mut rubik = Rubik::new();
     let mut input = String::new();
     loop {
-        // print_rubik(&rubik);
+        println!("entropy: {}", rubik.entropy());
+        print_rubik(&rubik);
         std::io::stdin().read_line(&mut input).unwrap();
         if input.starts_with("/reset") {
             rubik.reset();
@@ -92,9 +95,10 @@ pub fn main() {
             });
             println!("{}", tfs)
         } else if let Some(solver) = input.strip_prefix("/solve") {
-            let (new_rubik, transfrom) = match solver.trim() {
+            let s = match solver.trim() {
                 "C" => BfsSolver::C.solve(rubik),
-                "G0" => BfsSolver::G0.solve(rubik),
+                "SA" => SaRubikSolver.solve(rubik),
+                "G0" => IdaStarSolver::g0().solve(rubik),
                 "G1" => BfsSolver::G1.solve(rubik),
                 "G2" => BfsSolver::G2.solve(rubik),
                 "G3" => BfsSolver::G3.solve(rubik),
@@ -104,9 +108,10 @@ pub fn main() {
                     continue;
                 }
             };
+            let (new_rubik, ops) = s.collect();
             rubik = new_rubik;
-            println!("Solution.len: {}", transfrom.len());
-            let tfs: String = transfrom.iter().fold(String::new(), |mut s, tf| {
+            println!("Solution.len: {}", ops.len());
+            let tfs: String = ops.iter().fold(String::new(), |mut s, tf| {
                 s.push_str(&tf.to_string());
                 s
             });

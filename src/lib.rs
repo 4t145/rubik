@@ -1,6 +1,6 @@
 #![allow(clippy::unusual_byte_groupings)]
 
-use std::{ops::Deref, hash::Hash};
+use std::{hash::Hash, ops::Deref};
 
 use cube::{Cube, CubeFace};
 use solver::RubikSolver;
@@ -215,13 +215,38 @@ impl Rubik {
     }
 
     pub fn solve(&mut self, solver: impl RubikSolver) -> Vec<&'static RubikLayerTransform> {
-        let (new_rubik, tf) = solver.solve(self.clone());
-        *self = new_rubik;
-        tf
+        let s = solver.solve(self.clone());
+        let (rubik, ops) = s.collect();
+        *self = rubik;
+        ops
     }
 
     pub fn shuffle(&mut self, steps: usize) -> Vec<&'static RubikLayerTransform> {
         self.solve(solver::shuffle::Shuffle::new(steps))
+    }
+
+    pub fn edges(&self) -> impl Iterator<Item = &Cube> {
+        [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]
+            .iter()
+            .map(move |&x| &self.cubes[x])
+    }
+
+    pub fn corners(&self) -> impl Iterator<Item = &Cube> {
+        [0, 2, 6, 8, 18, 20, 24, 26]
+            .iter()
+            .map(move |&x| &self.cubes[x])
+    }
+
+    pub fn centers(&self) -> impl Iterator<Item = &Cube> {
+        [4, 10, 12, 14, 16, 22].iter().map(move |&x| &self.cubes[x])
+    }
+
+    pub fn active_cubes(&self) -> impl Iterator<Item = &Cube> {
+        self.edges().chain(self.corners()).chain(Some(self.core()))
+    }
+
+    pub fn entropy(&self) -> f64 {
+        Cube::entropy(self.active_cubes().copied())
     }
 }
 

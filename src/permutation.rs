@@ -65,6 +65,43 @@ impl CubePermutation {
         }
     }
 
+    pub const fn square(self) -> Self {
+        self.compose(self)
+    }
+
+    pub fn enumerate() -> impl Iterator<Item = Self> {
+        [
+            0b_11_10_01_00_u8,
+            0b_10_11_01_00_u8,
+            0b_11_01_10_00_u8,
+            0b_01_11_10_00_u8,
+            0b_01_10_11_00_u8,
+            0b_10_01_11_00_u8,
+        ]
+        .iter()
+        .flat_map(|i| {
+            [
+                (*i),
+                (*i).rotate_left(2),
+                (*i).rotate_left(4),
+                (*i).rotate_left(6),
+            ]
+        })
+        .map(Self)
+    }
+
+    pub const fn factor(self) -> (Self, Self) {
+        if self.0 & 0b11 == 0 {
+            (Self::UNIT, self)
+        } else if self.compose(Self::X_2).0 & 0b11 == 0 {
+            (Self::X_2, Self::X_2.compose(self))
+        } else if self.compose(Self::Y_2).0 & 0b11 == 0 {
+            (Self::Y_2, Self::Y_2.compose(self))
+        } else {
+            (Self::Z_2, Self::Z_2.compose(self))
+        }
+    }
+
     //
     //   01-----10
     //  /   U   /|
@@ -79,14 +116,24 @@ impl CubePermutation {
     pub const UNIT: Self = Self(0b_11_10_01_00);
 
     pub const X_1: Self = Self(0b_10_01_00_11);
-    pub const X_2: Self = Self::X_1.compose(Self::X_1);
+    pub const X_2: Self = Self::X_1.square();
     pub const X_3: Self = Self::X_1.inverse();
     pub const Y_1: Self = Self(0b_10_00_11_01);
-    pub const Y_2: Self = Self::Y_1.compose(Self::Y_1);
+    pub const Y_2: Self = Self::Y_1.square();
     pub const Y_3: Self = Self::Y_1.inverse();
     pub const Z_1: Self = Self(0b_00_01_11_10);
-    pub const Z_2: Self = Self::Z_1.compose(Self::Z_1);
+    pub const Z_2: Self = Self::Z_1.square();
     pub const Z_3: Self = Self::Z_1.inverse();
+
+    pub const F_X: Self = Self::X_2.factor().0;
+    pub const F_Y: Self = Self::Y_2.factor().0;
+    pub const F_Z: Self = Self::Z_2.factor().0;
+
+    pub const S_X: Self = Self::X_1.factor().1;
+    pub const S_Y: Self = Self::Y_1.factor().1;
+    pub const S_Z: Self = Self::Z_1.factor().1;
+    pub const S_P: Self = Self::S_X.compose(Self::S_Z);
+    pub const S_N: Self = Self::S_X.compose(Self::S_Y);
 
     pub const FRONT: Self = Self::X_1;
     pub const BACK: Self = Self::X_3;
@@ -100,24 +147,10 @@ impl CubePermutation {
     }
 }
 
-impl std::ops::Add for CubePermutation {
+impl std::ops::Mul for CubePermutation {
     type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         self.compose(rhs)
-    }
-}
-
-impl std::ops::Neg for CubePermutation {
-    type Output = Self;
-    fn neg(self) -> Self::Output {
-        self.inverse()
-    }
-}
-
-impl std::ops::Sub for CubePermutation {
-    type Output = Self;
-    fn sub(self, rhs: Self) -> Self::Output {
-        self.compose(rhs.inverse())
     }
 }
 
@@ -132,5 +165,16 @@ impl std::fmt::Debug for CubePermutation {
 impl Default for CubePermutation {
     fn default() -> Self {
         Self::UNIT
+    }
+}
+
+pub struct Flip(CubePermutation);
+
+impl Flip {
+    const fn check(&self) -> bool {
+        self.0 .0 == CubePermutation::X_2.0
+            || self.0 .0 == CubePermutation::Y_2.0
+            || self.0 .0 == CubePermutation::Z_2.0
+            || self.0 .0 == CubePermutation::UNIT.0
     }
 }

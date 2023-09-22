@@ -117,7 +117,11 @@ impl RubikLayerTransform {
         rotation: CubePermutation::BACK,
         ptr_rotate: PtrRotate::Rotate1,
     };
-
+    pub const UNIT: Self = Self {
+        layer: &RubikLayer::F,
+        rotation: CubePermutation::UNIT,
+        ptr_rotate: PtrRotate::Rotate0,
+    };
     pub const FI: Self = Self::F.inverse();
     pub const BI: Self = Self::B.inverse();
     pub const LI: Self = Self::L.inverse();

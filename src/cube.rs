@@ -1,5 +1,5 @@
 use crate::permutation::CubePermutation;
-use std::fmt::Debug;
+use std::{collections::HashMap, fmt::Debug, ops::AddAssign};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(transparent)]
@@ -55,6 +55,15 @@ impl Cube {
     }
     pub const fn get(&self, face: CubeFace) -> CubeFace {
         CubeFace::from_cube_permutation(self.rotation.compose(face.as_cube_permutation()))
+    }
+
+    pub fn entropy(iter: impl Iterator<Item = Self>) -> f64 {
+        let (map, n) = iter.fold((HashMap::new(), 0usize), |(mut map, count), cube| {
+            map.entry(cube).or_insert(0_usize).add_assign(1);
+            (map, count + 1)
+        });
+        let n = n as f64;
+        map.values().map(|x| (n / (*x as f64)).log2()).sum()
     }
 }
 

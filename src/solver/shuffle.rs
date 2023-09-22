@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use crate::prelude::RubikLayerTransform;
 
-use super::RubikSolver;
+use super::{RubikSolveState, RubikSolver, TransferableState};
 
 pub struct Shuffle {
     pub steps: usize,
@@ -12,21 +14,22 @@ impl Shuffle {
     }
 }
 impl RubikSolver for Shuffle {
-    fn solve(&self, mut rubik: crate::Rubik) -> (crate::Rubik, Vec<&'static RubikLayerTransform>) {
-        let op = [
-            &RubikLayerTransform::R,
-            &RubikLayerTransform::F,
-            &RubikLayerTransform::B,
-            &RubikLayerTransform::D,
-            &RubikLayerTransform::U,
-            &RubikLayerTransform::L,
-        ];
-        let mut shuffle = vec![];
+    fn solve(&self, mut rubik: crate::Rubik) -> RubikSolveState {
+        let mut state = RubikSolveState {
+            rubik,
+            from: None,
+            op_set: Arc::new([
+                &RubikLayerTransform::R,
+                &RubikLayerTransform::F,
+                &RubikLayerTransform::B,
+                &RubikLayerTransform::D,
+                &RubikLayerTransform::U,
+                &RubikLayerTransform::L,
+            ]),
+        };
         for _round in 0..self.steps {
-            let idx = rand::random::<usize>() % op.len();
-            op[idx].apply_on(&mut rubik);
-            shuffle.push(op[idx])
+            state = state.random_transfer()
         }
-        (rubik, shuffle)
+        state
     }
 }

@@ -2,10 +2,11 @@ use std::collections::HashSet;
 
 use crate::{
     prelude::{Cube, CubeFace, CubePermutation, RubikLayerTransform},
+    solver::TransferableState,
     tf, Rubik, RubikLayer,
 };
 
-use super::RubikSolver;
+use super::{RubikSolveState, RubikSolver};
 
 pub struct Thistlethwaite {
     pub thread: usize,
@@ -29,22 +30,9 @@ fn checker_c(rubik: &Rubik) -> bool {
     rubik.core().rotation == CubePermutation::UNIT
 }
 fn checker_g0(rubik: &Rubik) -> bool {
-    rubik.iter_by_layer(&RubikLayer::E).all(|cube| {
-        all_aligned(cube.clone().rotate(CubePermutation::Y_1))
-            || all_aligned(
-                cube.clone()
-                    .rotate(CubePermutation::Y_1.compose(CubePermutation::Z_1)),
-            )
-    }) && rubik.iter_by_layer(&RubikLayer::M).all(|cube| {
-        all_aligned(cube.clone().rotate(CubePermutation::Z_1))
-            || all_aligned(
-                cube.clone()
-                    .rotate(CubePermutation::Z_1.compose(CubePermutation::Y_1)),
-            )
-    }) && rubik.iter_by_layer(&RubikLayer::S).all(|cube| {
-        all_aligned(cube.clone().rotate(CubePermutation::Z_1))
-            || all_aligned(cube.clone().rotate(CubePermutation::Y_1))
-    })
+    rubik
+        .active_cubes()
+        .all(|c| c.get(CubeFace::U) == CubeFace::U || c.get(CubeFace::U) == CubeFace::D)
 }
 fn checker_g1(rubik: &Rubik) -> bool {
     fn g1_aligned(cube: &Cube) -> bool {
@@ -62,24 +50,16 @@ fn checker_g2(rubik: &Rubik) -> bool {
 }
 
 impl BfsSolver {
-    fn bfs(
-        &self,
-        quene: Vec<(Rubik, Vec<&'static RubikLayerTransform>)>,
-        mut reached: HashSet<Rubik>,
-    ) -> (Rubik, Vec<&'static RubikLayerTransform>) {
+    fn bfs(&self, quene: Vec<RubikSolveState>, mut reached: HashSet<Rubik>) -> RubikSolveState {
         let mut new_quene = vec![];
-        for (rubik, ops) in quene.into_iter() {
-            if (self.checker)(&rubik) {
-                return (rubik, ops);
+        for state in quene.into_iter() {
+            if (self.checker)(&state.rubik) {
+                return state;
             }
-            for op in self.gen_group {
-                let mut rubik = rubik.clone();
-                op.apply_on(&mut rubik);
-                if !reached.contains(&rubik) {
-                    reached.insert(rubik.clone());
-                    let mut new_ops = ops.clone();
-                    new_ops.push(*op);
-                    new_quene.push((rubik, new_ops));
+            for next_state in state.neighbors() {
+                if !reached.contains(&next_state.rubik) {
+                    reached.insert(next_state.rubik.clone());
+                    new_quene.push(next_state);
                 }
             }
         }
@@ -153,23 +133,27 @@ impl BfsSolver {
 }
 
 impl RubikSolver for BfsSolver {
-    fn solve(&self, rubik: Rubik) -> (Rubik, Vec<&'static RubikLayerTransform>) {
-        self.bfs(vec![(rubik.clone(), vec![])], HashSet::from([rubik]))
+    fn solve(&self, rubik: Rubik) -> RubikSolveState {
+        let state = RubikSolveState {
+            rubik: rubik.clone(),
+            op_set: self.gen_group.into(),
+            from: None,
+        };
+        self.bfs(vec![state], HashSet::from([rubik]))
     }
 }
 
 impl<A: RubikSolver, B: RubikSolver> RubikSolver for (A, B) {
-    fn solve(&self, rubik: Rubik) -> (Rubik, Vec<&'static RubikLayerTransform>) {
-        let (s0, o0) = self.0.solve(rubik);
-        let (s1, o1) = self.1.solve(s0);
-        (s1, [o0, o1].concat())
+    fn solve(&self, rubik: Rubik) -> RubikSolveState {
+        let s0 = self.0.solve(rubik);
+        self.1.solve(s0.rubik)
     }
 }
 
 pub struct CSolver;
 
 impl RubikSolver for Thistlethwaite {
-    fn solve(&self, rubik: crate::Rubik) -> (Rubik, Vec<&'static RubikLayerTransform>) {
+    fn solve(&self, rubik: crate::Rubik) -> RubikSolveState {
         (
             BfsSolver::C,
             (
