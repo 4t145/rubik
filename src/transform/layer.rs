@@ -37,6 +37,13 @@ impl Display for RubikLayerTransform {
 
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayerTransform {
+    pub fn sequence_to_string<'a>(seq: impl Iterator<Item = &'a Self>, ) -> String {
+        let mut s = String::new();
+        for tf in seq {
+            s.push_str(&tf.to_string());
+        }
+        s
+    }
     pub fn apply_on(&self, rubik: &mut Rubik) {
         for index in self.layer.iter().copied() {
             rubik.cubes[index as usize].rotate(self.rotation);
