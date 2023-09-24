@@ -93,12 +93,14 @@ impl CubePermutation {
     pub const fn factor(self) -> (Self, Self) {
         if self.0 & 0b11 == 0 {
             (Self::UNIT, self)
-        } else if self.compose(Self::X_2).0 & 0b11 == 0 {
+        } else if Self::X_2.compose(self).0 & 0b11 == 0 {
             (Self::X_2, Self::X_2.compose(self))
-        } else if self.compose(Self::Y_2).0 & 0b11 == 0 {
+        } else if Self::Y_2.compose(self).0 & 0b11 == 0 {
             (Self::Y_2, Self::Y_2.compose(self))
-        } else {
+        } else if Self::Z_2.compose(self).0 & 0b11 == 0 {
             (Self::Z_2, Self::Z_2.compose(self))
+        } else {
+            unreachable!()
         }
     }
 
@@ -124,16 +126,6 @@ impl CubePermutation {
     pub const Z_1: Self = Self(0b_00_01_11_10);
     pub const Z_2: Self = Self::Z_1.square();
     pub const Z_3: Self = Self::Z_1.inverse();
-
-    pub const F_X: Self = Self::X_2.factor().0;
-    pub const F_Y: Self = Self::Y_2.factor().0;
-    pub const F_Z: Self = Self::Z_2.factor().0;
-
-    pub const S_X: Self = Self::X_1.factor().1;
-    pub const S_Y: Self = Self::Y_1.factor().1;
-    pub const S_Z: Self = Self::Z_1.factor().1;
-    pub const S_P: Self = Self::S_X.compose(Self::S_Z);
-    pub const S_N: Self = Self::S_X.compose(Self::S_Y);
 
     pub const FRONT: Self = Self::X_1;
     pub const BACK: Self = Self::X_3;
