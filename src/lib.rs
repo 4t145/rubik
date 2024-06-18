@@ -231,6 +231,12 @@ impl Rubik {
             .map(move |&x| &self.cubes[x])
     }
 
+    pub fn edges_e(&self) -> impl Iterator<Item = &Cube> {
+        [3, 5, 21, 23]
+            .iter()
+            .map(move |&x| &self.cubes[x])
+    }
+
     pub fn corners(&self) -> impl Iterator<Item = &Cube> {
         [0, 2, 6, 8, 18, 20, 24, 26]
             .iter()

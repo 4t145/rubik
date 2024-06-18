@@ -13,6 +13,12 @@ pub struct RubikLayerTransform {
     ptr_rotate: PtrRotate,
 }
 
+impl PartialEq for RubikLayerTransform {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::eq(self.layer, other.layer) && self.rotation == other.rotation
+    }
+}
+
 impl std::fmt::Debug for RubikLayerTransform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RubikLayerTransform")
@@ -37,7 +43,7 @@ impl Display for RubikLayerTransform {
 
 #[allow(clippy::zero_prefixed_literal)]
 impl RubikLayerTransform {
-    pub fn sequence_to_string<'a>(seq: impl Iterator<Item = &'a Self>, ) -> String {
+    pub fn sequence_to_string<'a>(seq: impl Iterator<Item = &'a Self>) -> String {
         let mut s = String::new();
         for tf in seq {
             s.push_str(&tf.to_string());

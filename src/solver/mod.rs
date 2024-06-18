@@ -24,7 +24,7 @@ pub trait TransferableState {
 pub struct RubikSolveState {
     rubik: Rubik,
     op_set: Arc<[&'static RubikLayerTransform]>,
-    from: Option<(Arc<Self>, &'static RubikLayerTransform,)>,
+    from: Option<(Arc<Self>, &'static RubikLayerTransform)>,
 }
 
 impl RubikSolveState {
@@ -34,7 +34,7 @@ impl RubikSolveState {
             op_set,
             from: None,
         }
-    } 
+    }
     pub fn collect(self) -> (Rubik, Vec<&'static RubikLayerTransform>) {
         let rubik = self.rubik;
         let mut from = self.from;
@@ -45,10 +45,6 @@ impl RubikSolveState {
         }
         ops.reverse();
         (rubik, ops)
-    }
-
-    pub fn rubik() {
-
     }
 }
 
@@ -61,14 +57,19 @@ impl TransferableState for RubikSolveState {
             .clone()
             .op_set
             .iter()
-            .map(move |op| {
+            .filter_map(move |op| {
+                if let Some((_, prev_op)) = &arc_self.from {
+                    if (*prev_op).eq(&op.inverse()) {
+                        return None;
+                    }
+                }
                 let mut rubik = arc_self.rubik.clone();
                 op.apply_on(&mut rubik);
-                Self {
+                Some(Self {
                     rubik,
                     op_set: arc_self.op_set.clone(),
                     from: Some((arc_self.clone(), *op)),
-                }
+                })
             })
             .collect::<Vec<_>>()
             .into_iter()
@@ -89,7 +90,7 @@ impl TransferableState for RubikSolveState {
         }
     }
 }
+pub mod ida_star;
 pub mod sa;
 pub mod shuffle;
 pub mod thistlethwaite;
-pub mod ida_star;
