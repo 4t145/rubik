@@ -225,10 +225,12 @@ impl Rubik {
         self.solve(solver::shuffle::Shuffle::new(steps))
     }
 
+    pub fn cubes_at(&self, iter: impl Iterator<Item = usize>) -> impl Iterator<Item = &Cube> {
+        iter.map(move |x| &self.cubes[x])
+    }
+
     pub fn edges(&self) -> impl Iterator<Item = &Cube> {
-        [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]
-            .iter()
-            .map(move |&x| &self.cubes[x])
+        self.cubes_at([1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25].into_iter())
     }
 
     pub fn edges_e(&self) -> impl Iterator<Item = &Cube> {
@@ -238,9 +240,7 @@ impl Rubik {
     }
 
     pub fn corners(&self) -> impl Iterator<Item = &Cube> {
-        [0, 2, 6, 8, 18, 20, 24, 26]
-            .iter()
-            .map(move |&x| &self.cubes[x])
+        self.cubes_at([0, 2, 6, 8, 18, 20, 24, 26].into_iter())
     }
 
     pub fn centers(&self) -> impl Iterator<Item = &Cube> {

@@ -97,4 +97,6 @@ fn test_sub_group() {
         .filter_map(|x|x.iter().find(|s|s.into_inner() & 0b11 == 0))
         .collect::<Vec<_>>();
     dbg!(&quotient_group);
+    println!("{:?}{:?}", &CubePermutation::Z_1.factor().0, &CubePermutation::Z_1.factor().1);
+    println!("{:?}{:?}", &CubePermutation::Z_3.factor().0, &CubePermutation::Z_3.factor().1);
 }
