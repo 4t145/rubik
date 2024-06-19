@@ -42,6 +42,11 @@ pub fn test_cube_xyz_rotation() {
             .compose(CubePermutation::Z_1),
     );
     dbg!(cube);
+    let mut cube = Cube::new();
+    cube.rotate(
+        CubePermutation::I
+    );
+    dbg!(cube);
     // assert_eq!(cube.get(CubeFace::L), CubeFace::F);
     // assert_eq!(cube.get(CubeFace::F), CubeFace::R);
     // assert_eq!(cube.get(CubeFace::R), CubeFace::B);

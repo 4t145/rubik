@@ -97,7 +97,15 @@ impl RubikLayerTransform {
             ptr_rotate: self.ptr_rotate.square(),
         }
     }
-
+    pub const fn rotation(&self) -> CubePermutation {
+        self.rotation
+    }
+    pub const fn layer(&self) -> &'static RubikLayer {
+        self.layer
+    }
+    pub const fn ptr_rotate(&self) -> PtrRotate {
+        self.ptr_rotate
+    }
     pub const F: Self = Self {
         layer: &RubikLayer::F,
         rotation: CubePermutation::FRONT,
@@ -170,7 +178,7 @@ impl RubikLayerTransform {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-enum PtrRotate {
+pub enum PtrRotate {
     Rotate0,
     Rotate1,
     Rotate2,
