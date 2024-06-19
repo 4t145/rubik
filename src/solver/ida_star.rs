@@ -58,7 +58,7 @@ impl IdaStarSolver {
 
 fn digest_g0(rubik: &Rubik) -> u64 {
     fn encode_edge_e(cube: &Cube) -> u64 {
-        let s = cube.rotation.factor().1 .0;
+        let s = cube.rotation.factor_2().1 .0;
         match s {
             0b_11_10_01_00 => 0,
             0b_10_11_01_00 => 1,
@@ -139,7 +139,7 @@ fn g0_align(c: Cube) -> u64 {
     }
 }
 fn g1_align(c: Cube) -> u64 {
-    match c.rotation.factor().0 {
+    match c.rotation.factor_2().0 {
         CubePermutation::UNIT => 0,
         CubePermutation::X_2 => 1,
         CubePermutation::Y_2 => 2,

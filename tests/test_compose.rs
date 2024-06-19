@@ -92,11 +92,43 @@ fn test_sub_group() {
                 set
             });
     assert_eq!(quotient_group.len(), 6);
-    let quotient_group =
-    quotient_group.iter()
-        .filter_map(|x|x.iter().find(|s|s.into_inner() & 0b11 == 0))
+    let quotient_group = quotient_group
+        .iter()
+        .filter_map(|x| x.iter().find(|s| s.into_inner() & 0b11 == 0))
         .collect::<Vec<_>>();
     dbg!(&quotient_group);
-    println!("{:?}{:?}", &CubePermutation::Z_1.factor().0, &CubePermutation::Z_1.factor().1);
-    println!("{:?}{:?}", &CubePermutation::Z_3.factor().0, &CubePermutation::Z_3.factor().1);
+    println!(
+        "{:?}{:?}",
+        &CubePermutation::Z_1.factor_2().0,
+        &CubePermutation::Z_1.factor_2().1
+    );
+    println!(
+        "{:?}{:?}",
+        &CubePermutation::Z_3.factor_2().0,
+        &CubePermutation::Z_3.factor_2().1
+    );
+}
+
+#[test]
+fn test_factor_3() {
+    let f0_set = [
+        CubePermutation::UNIT,
+        CubePermutation::X_2,
+        CubePermutation::Y_2,
+        CubePermutation::Z_2,
+    ];
+    let f1_set = [
+        CubePermutation::UNIT,
+        CubePermutation::C1,
+        CubePermutation::C2,
+    ];
+    let f2_set = [CubePermutation::UNIT, CubePermutation::I];
+
+    for p in CubePermutation::enumerate() {
+        let (f0, f1, f2) = p.factor_3();
+        println!("{:?} => {:?} x {:?} x {:?}", p, f0, f1, f2);
+        assert!(f0_set.contains(&f0));
+        assert!(f1_set.contains(&f1));
+        assert!(f2_set.contains(&f2));
+    }
 }

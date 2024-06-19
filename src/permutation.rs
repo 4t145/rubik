@@ -90,7 +90,21 @@ impl CubePermutation {
         .map(Self)
     }
 
-    pub const fn factor(self) -> (Self, Self) {
+    const fn align(self) -> Self {
+        let mut value = self.0;
+        if value & 0b11 != 0b00 {
+            value = value.rotate_left(2);
+        }
+        if value & 0b11 != 0b00 {
+            value = value.rotate_left(2);
+        }
+        if value & 0b11 != 0b00 {
+            value = value.rotate_left(2);
+        }
+        Self(value)
+    }
+
+    pub const fn factor_2(self) -> (Self, Self) {
         if self.0 & 0b11 == 0 {
             (Self::UNIT, self)
         } else if Self::X_2.compose(self).0 & 0b11 == 0 {
@@ -104,6 +118,37 @@ impl CubePermutation {
         }
     }
 
+    /// factor 0 group: {UNIT, X_2, Y_2, Z_2}
+    /// 
+    /// factor 1 group: {UNIT, C1, C2,}
+    /// 
+    /// factor 2 group: {UNIT, I}
+    pub const fn factor_3(self) -> (Self, Self, Self) {
+        let (f0, f1) = self.factor_2();
+        const Q: [u8; 6] = [
+            CubePermutation::UNIT.0,
+            CubePermutation::I.0,
+            CubePermutation::C1.compose(CubePermutation::I).0,
+            CubePermutation::C2.compose(CubePermutation::I).0,
+            CubePermutation::C1.0,
+            CubePermutation::C2.0,
+        ];
+        if f1.0 == Q[0] {
+            (f0, Self::UNIT, Self::UNIT)
+        } else if f1.0 == Q[1] {
+            (f0, Self::UNIT, Self::I)
+        } else if f1.0 == Q[2] {
+            (f0, Self::C1, Self::I)
+        } else if f1.0 == Q[3] {
+            (f0, Self::C2, Self::I)
+        } else if f1.0 == Q[4] {
+            (f0, Self::C1, Self::UNIT)
+        } else if f1.0 == Q[5] {
+            (f0, Self::C2, Self::UNIT)
+        } else {
+            unreachable!()
+        }
+    }
     //
     //   01-----10
     //  /   U   /|
@@ -133,6 +178,13 @@ impl CubePermutation {
     pub const LEFT: Self = Self::Y_3;
     pub const UP: Self = Self::Z_1;
     pub const DOWN: Self = Self::Z_3;
+    // factor 0 group: {UNIT, X_2, Y_2, Z_2}
+    // factor 1 group: {UNIT, Y_1, Z_1, X_3, Y_3, UNIT}
+
+    pub const C1: Self = Self(0b_01_11_10_00);
+    pub const C2: Self = Self::C1.inverse();
+
+    pub const I: Self = Self(0b_01_10_11_00);
 
     pub const fn unit() -> Self {
         Self::UNIT
