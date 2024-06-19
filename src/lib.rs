@@ -315,6 +315,13 @@ impl CubePosition {
     unsafe fn from_u8(pos_code: u8) -> Self {
         std::mem::transmute(pos_code)
     }
+    pub fn try_from_u8(pos_code: u8) -> Option<Self> {
+        if pos_code < 27 {
+            Some(unsafe { Self::from_u8(pos_code) })
+        } else {
+            None
+        }
+    }
     pub fn horizon_layer(self) -> &'static RubikLayer {
         match (self as u8) % 9 {
             0..=2 => &RubikLayer::U,
