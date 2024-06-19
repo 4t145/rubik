@@ -4,7 +4,7 @@ use std::{hash::Hash, ops::Deref};
 
 use cube::{Cube, CubeFace};
 use solver::RubikSolver;
-use transform::{RubikLayerTransform, RubikTransform};
+use transform::RubikLayerTransform;
 
 pub mod colored;
 pub mod cube;
@@ -234,9 +234,7 @@ impl Rubik {
     }
 
     pub fn edges_e(&self) -> impl Iterator<Item = &Cube> {
-        [3, 5, 21, 23]
-            .iter()
-            .map(move |&x| &self.cubes[x])
+        [3, 5, 21, 23].iter().map(move |&x| &self.cubes[x])
     }
 
     pub fn corners(&self) -> impl Iterator<Item = &Cube> {
@@ -278,5 +276,67 @@ impl std::fmt::Debug for Rubik {
         collect_layer(CubeFace::U, self.iter_by_layer(&RubikLayer::U), &mut f);
         collect_layer(CubeFace::D, self.iter_by_layer(&RubikLayer::D), &mut f);
         f.finish()
+    }
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CubePosition {
+    FUL = 0,
+    FU = 1,
+    FUR = 2,
+    FL = 3,
+    F = 4,
+    FR = 5,
+    FDL = 6,
+    FD = 7,
+    FDR = 8,
+    UL = 9,
+    U = 10,
+    UR = 11,
+    L = 12,
+    C = 13,
+    R = 14,
+    DLL = 15,
+    DL = 16,
+    DLR = 17,
+    BUL = 18,
+    BU = 19,
+    BUR = 20,
+    BL = 21,
+    B = 22,
+    BR = 23,
+    BDL = 24,
+    BD = 25,
+    BDR = 26,
+}
+
+impl CubePosition {
+    unsafe fn from_u8(pos_code: u8) -> Self {
+        std::mem::transmute(pos_code)
+    }
+    pub fn horizon_layer(self) -> &'static RubikLayer {
+        match (self as u8) % 9 {
+            0..=2 => &RubikLayer::U,
+            3..=5 => &RubikLayer::E,
+            6..=8 => &RubikLayer::D,
+            _ => unreachable!(),
+        }
+    }
+    pub fn frontal_layer(self) -> &'static RubikLayer {
+        match (self as u8) / 9 {
+            0 => &RubikLayer::F,
+            1 => &RubikLayer::S,
+            2 => &RubikLayer::B,
+            _ => unreachable!(),
+        }
+    }
+    pub fn lateral_layer(self) -> &'static RubikLayer {
+        match (self as u8) % 3 {
+            0 => &RubikLayer::L,
+            1 => &RubikLayer::M,
+            2 => &RubikLayer::R,
+            _ => unreachable!(),
+        }
     }
 }

@@ -163,7 +163,7 @@ impl Default for CubePermutation {
 pub struct Flip(CubePermutation);
 
 impl Flip {
-    const fn check(&self) -> bool {
+    pub const fn check(&self) -> bool {
         self.0 .0 == CubePermutation::X_2.0
             || self.0 .0 == CubePermutation::Y_2.0
             || self.0 .0 == CubePermutation::Z_2.0

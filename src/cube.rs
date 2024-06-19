@@ -40,6 +40,11 @@ impl CubeFace {
     }
 }
 
+impl Default for Cube {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Cube {
     pub const fn new() -> Self {
         Self {

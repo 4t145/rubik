@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 
 use crate::permutation::CubePermutation;
-use crate::{Rubik, RubikLayer};
+use crate::{CubePosition, Rubik, RubikLayer};
 
 use super::RubikTransform;
 
@@ -69,6 +69,19 @@ impl RubikLayerTransform {
                 rubik.ptr_of(indicies[3]),
             ]);
         }
+    }
+    pub fn apply_on_position(&self, position: CubePosition) -> CubePosition {
+        let indicies = &self.layer;
+        for (idx, pos) in indicies.iter().enumerate() {
+            if *pos == position as u8 {
+                unsafe {
+                    return CubePosition::from_u8(
+                        indicies[(self.ptr_rotate.as_permutation())[idx]],
+                    );
+                }
+            }
+        }
+        position
     }
     pub const fn inverse(self) -> Self {
         Self {
@@ -187,6 +200,14 @@ impl PtrRotate {
             PtrRotate::Rotate1 => PtrRotate::Rotate2,
             PtrRotate::Rotate2 => PtrRotate::Rotate0,
             PtrRotate::Rotate3 => PtrRotate::Rotate2,
+        }
+    }
+    pub const fn as_permutation(self) -> &'static [usize; 9] {
+        match self {
+            PtrRotate::Rotate0 => &[0, 1, 2, 3, 4, 5, 6, 7, 8],
+            PtrRotate::Rotate1 => &[6, 3, 0, 7, 4, 1, 8, 5, 2],
+            PtrRotate::Rotate2 => &[8, 7, 6, 5, 4, 3, 2, 1, 0],
+            PtrRotate::Rotate3 => &[2, 5, 8, 1, 4, 7, 0, 3, 6],
         }
     }
 }
