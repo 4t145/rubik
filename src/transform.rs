@@ -1,7 +1,7 @@
 mod layer;
 pub use layer::*;
 
-use crate::Rubik;
+use crate::{CubePosition, Rubik};
 
 impl Rubik {
     pub fn execute(&mut self, operation: &RubikTransform) -> &mut Self {

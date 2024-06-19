@@ -70,18 +70,18 @@ impl RubikLayerTransform {
             ]);
         }
     }
-    pub fn apply_on_position(&self, position: CubePosition) -> CubePosition {
+    pub fn apply_on_position(&self, position: CubePosition) -> Option<CubePosition> {
         let indicies = &self.layer;
         for (idx, pos) in indicies.iter().enumerate() {
             if *pos == position as u8 {
                 unsafe {
-                    return CubePosition::from_u8(
+                    return Some(CubePosition::from_u8(
                         indicies[(self.ptr_rotate.as_permutation())[idx]],
-                    );
+                    ));
                 }
             }
         }
-        position
+        None
     }
     pub const fn inverse(self) -> Self {
         Self {
