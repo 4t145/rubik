@@ -40,7 +40,7 @@ LL_LL_LL    FF_FF_FF    RR_RR_RR    BB_BB_BB
             24_25_26
 */
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub struct RubikLayer {
     // cude indexes assuming rotaion is clockwise
     cude_indexes: [u8; 9],
@@ -115,6 +115,9 @@ impl RubikLayer {
                 self.cude_indexes[6],
             ],
         }
+    }
+    pub const fn indexes(&self) -> &[u8; 9] {
+        &self.cude_indexes
     }
     pub const F: Self = Self {
         cude_indexes: [00, 01, 02, 03, 04, 05, 06, 07, 08],

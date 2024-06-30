@@ -130,5 +130,12 @@ fn test_factor_3() {
         assert!(f0_set.contains(&f0));
         assert!(f1_set.contains(&f1));
         assert!(f2_set.contains(&f2));
+        assert!(f0 * f1 * f2 == p);
     }
+
+    dbg!(CubePermutation::RIGHT);
+
+    let cube = Cube::new().rotate(CubePermutation::I).clone();
+    dbg!(&cube);
 }
+

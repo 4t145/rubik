@@ -5,18 +5,12 @@ use crate::{CubePosition, Rubik, RubikLayer};
 
 use super::RubikTransform;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq)]
 pub struct RubikLayerTransform {
     // cude indexes assuming rotaion is clockwise
     layer: &'static RubikLayer,
     rotation: CubePermutation,
     ptr_rotate: PtrRotate,
-}
-
-impl PartialEq for RubikLayerTransform {
-    fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(self.layer, other.layer) && self.rotation == other.rotation
-    }
 }
 
 impl std::fmt::Debug for RubikLayerTransform {
@@ -177,7 +171,7 @@ impl RubikLayerTransform {
     pub const S2: Self = Self::S.square();
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum PtrRotate {
     Rotate0,
     Rotate1,

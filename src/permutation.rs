@@ -200,8 +200,29 @@ impl std::ops::Mul for CubePermutation {
 
 impl std::fmt::Debug for CubePermutation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("CubePermutation")
-            .field(&[self.get(0), self.get(1), self.get(2), self.get(3)])
+        let (f0, f1, f2) = self.factor_3();
+        let f0 = match f0 {
+            Self::UNIT => "UNIT",
+            Self::X_2 => "X_2",
+            Self::Y_2 => "Y_2",
+            Self::Z_2 => "Z_2",
+            _ => unreachable!(),
+        };
+        let f1 = match f1 {
+            Self::UNIT => "UNIT",
+            Self::C1 => "C1",
+            Self::C2 => "C2",
+            _ => unreachable!(),
+        };
+        let f2 = match f2 {
+            Self::UNIT => "UNIT",
+            Self::I => "I",
+            _ => unreachable!(),
+        };
+
+        f.debug_struct("CubePermutation")
+            .field("perm", &[self.get(0), self.get(1), self.get(2), self.get(3)])
+            .field("factor", &(f0, f1, f2))
             .finish()
     }
 }
